@@ -12,11 +12,11 @@ class TestSchemas(TestCase):
 
     def test_valid_aircraft_model(self):
         valid_aircraft = dict(id=152, name='aircraft name')
-        self.assertDictEqual(AircraftModel(**valid_aircraft).model_dump(), valid_aircraft)
+        self.assertDictEqual(AircraftModel(**valid_aircraft).model_dump(by_alias=True), valid_aircraft)
 
     def test_valid_country_model(self):
         valid_country = dict(name='Russia', region='DOMESTIC')
-        self.assertDictEqual(CountryModel(**valid_country).model_dump(), valid_country)
+        self.assertDictEqual(CountryModel(**valid_country).model_dump(by_alias=True), valid_country)
 
     def test_valid_airport_model(self):
         valid_airport = dict(
@@ -33,7 +33,7 @@ class TestSchemas(TestCase):
             long=-81.436943,
             timezone='America/Havana',
         )
-        self.assertDictEqual(AirportModel(**valid_airport).model_dump(), valid_airport)
+        self.assertDictEqual(AirportModel(**valid_airport).model_dump(by_alias=True), valid_airport)
 
     def test_valid_company_model(self):
         valid_company = dict(
@@ -42,7 +42,7 @@ class TestSchemas(TestCase):
             url_buy='https://nordwindairlines.ru/',
             url_register='https://airbook.nordwindairlines.ru/check-in/?lang=ru#search',
         )
-        self.assertDictEqual(CompanyModel(**valid_company).model_dump(), valid_company)
+        self.assertDictEqual(CompanyModel(**valid_company).model_dump(by_alias=True), valid_company)
 
     def test_valid_flight_model(self):
         valid_flight = dict(
@@ -118,4 +118,4 @@ class TestSchemas(TestCase):
                 url_register='https://airbook.nordwindairlines.ru/check-in/?lang=ru#search',
             )
         )
-        self.assertDictEqual(FlightModel(**valid_flight).model_dump(), valid_flight)
+        self.assertDictEqual(FlightModel(**valid_flight).model_dump(by_alias=True), valid_flight)

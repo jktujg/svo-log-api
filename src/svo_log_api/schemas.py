@@ -12,7 +12,7 @@ class BaseEntity(BaseModel):
 
 
 class AircraftModel(BaseEntity):
-    id: int | None = None
+    orig_id: int | None = Field(alias='id')
     name: str | None = None
 
 
@@ -22,7 +22,7 @@ class CountryModel(BaseEntity):
 
 
 class AirportModel(BaseEntity):
-    id: int
+    orig_id: int = Field(alias='id')
     iata: str = Field(pattern='[A-Z]{3}')
     icao: str = Field(pattern='[A-Z]{4}')
     code_ru: str | None = Field(pattern='[А-Я]{3}')
@@ -49,7 +49,7 @@ class Direction(Enum):
 
 
 class FlightModel(BaseEntity):
-    id: int
+    orig_id: int = Field(alias='id')
     direction: Annotated[str, Direction]
     company: CompanyModel
     number: int
