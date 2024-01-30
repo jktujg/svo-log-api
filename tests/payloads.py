@@ -71,7 +71,7 @@ class FlightPayload(Payload):
     main_id: SkipValidation[Any] = 8770879
     status_code: SkipValidation[Any] = 12
     status_id: SkipValidation[Any] = 70
-    aircraft: SkipValidation[Any] = dict(id=152, name='aircraft name')
+    aircraft: SkipValidation[Any] = AircraftPayload()
     chin_start_et: SkipValidation[Any] = '2023-12-19T18:55:00+03:00'
     chin_end_et: SkipValidation[Any] = '2023-12-19T18:55:00+03:00'
     bbel_start_et: SkipValidation[Any] = '2023-12-20T04:56:00+03:00'
