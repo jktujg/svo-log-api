@@ -74,8 +74,24 @@ class SyncOrm:
 
         return res.scalars().all()
 
-    def upsert_companies(self, data: list):
-        ...
+    @staticmethod
+    def upsert_companies(conn: Session, data: Sequence[schemas.CompanySchema]) -> Sequence[models.CompanyModel]:
+        unique_companies = utils.unique_schemas(data, unique_keys=['iata'])
+
+        stmt = (
+            insert(models.CompanyModel)
+            .returning(models.CompanyModel)
+            .values([c.model_dump() for c in unique_companies])
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[models.CompanyModel.__table__.columns.iata],
+            set_={column_name: getattr(stmt.excluded, column_name) for column_name in utils.get_columns(models.CompanyModel).keys()}
+        )
+
+        res = conn.execute(stmt)
+        conn.commit()
+
+        return res.scalars().all()
 
     def upsert_flights(self, data: list):
         ...
