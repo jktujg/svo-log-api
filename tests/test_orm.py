@@ -8,34 +8,10 @@ from src.svo_log_api import models
 from src.svo_log_api import schemas
 from src.svo_log_api.queries.orm import SyncOrm
 
-
-engine = create_engine(
-    url=settings.TEST_DATABASE_URL_psycopg,
-    echo=False,
-)
+from .fixtures import DatabaseTestCase
 
 
-class TestModels(TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        if database_exists(engine.url):
-            drop_database(engine.url)
-
-        create_database(engine.url)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        if database_exists(engine.url):
-            drop_database(engine.url)
-
-    def setUp(self) -> None:
-        models.Base.metadata.create_all(bind=engine)
-        self.conn = sessionmaker(bind=engine)()
-
-    def tearDown(self) -> None:
-        self.conn.close()
-        models.Base.metadata.drop_all(bind=engine)
-
+class TestModels(DatabaseTestCase):
     def test_aircrafts_upsert(self):
         aircraft_1 = schemas.AircraftSchema(id=1, name='Boeing-777')
         aircraft_2 = schemas.AircraftSchema(id=1, name='SU-9')
@@ -90,7 +66,7 @@ class TestModels(TestCase):
 
         self.assertEqual(result_2[0].code_ru, airport_2.code_ru)
 
-        engine.echo = False
+        self.engine.echo = False
 
 
 
