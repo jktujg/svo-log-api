@@ -43,10 +43,12 @@ class TestModels(DatabaseTestCase):
         self.assertEqual(result_2[0].name, company_2.name)
 
 
+    def test_flights_upsert(self):
+        flight_1 = payloads.FlightPayload(id=1, chin_id='old')
+        flight_2 = payloads.FlightPayload(id=1, chin_id='new')
 
+        result1 = SyncOrm.upsert_flights(self.conn, [flight_1])
+        result2 = SyncOrm.upsert_flights(self.conn, [flight_2])
 
-
-
-
-
-
+        self.assertEqual(result2[0].orig_id, flight_1.orig_id)      # `orig_id` is aliased `id`
+        self.assertEqual(result2[0].chin_id, flight_2.chin_id)
