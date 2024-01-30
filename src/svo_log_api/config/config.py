@@ -9,6 +9,7 @@ class Settings(BaseModel):
     DB_USER: str = Field(alias='db_user')
     DB_PASS: str = Field(alias='db_pass')
     DB_NAME: str = Field(alias='db_name')
+    TEST_DB_NAME: str = Field(alias='test_db_name')
 
     @property
     def DATABASE_URL_psycopg(self):
@@ -18,10 +19,14 @@ class Settings(BaseModel):
     def DATABASE_URL_asyncpg(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
+    @property
+    def TEST_DATABASE_URL_psycopg(self):
+        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.TEST_DB_NAME}"
+
 
 config = ConfigParser()
 config.read(Path(__file__).parent / 'env.ini')
-settings = Settings(**config['DataBase'])
+settings = Settings(**config['DataBase'], **config['TestDataBase'])
 
 
 
