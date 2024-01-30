@@ -38,7 +38,7 @@ class AirportSchema(BaseEntity):
 
 
 class CompanySchema(BaseEntity):
-    code: str = Field(pattern=r'\w{2}')
+    iata: str = Field(pattern=r'\w{2}', alias='code')
     name: str | None = None
     url_buy: Annotated[str, AnyHttpUrl] | None = None
     url_register: Annotated[str, AnyHttpUrl] | None = None

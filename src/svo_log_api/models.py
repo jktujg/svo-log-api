@@ -44,3 +44,13 @@ class AirportModel(Base):
     country = relationship('CountryModel', back_populates='airports', lazy='joined')
 
 
+class CompanyModel(Base):
+    __tablename__ = 'companies'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    iata: Mapped[str] = mapped_column(String(2), unique=True)
+    name: Mapped[Optional[str]]
+    url_buy: Mapped[Optional[str]]
+    url_register: Mapped[Optional[str]]
+
+
