@@ -30,3 +30,26 @@ class TestModels(DatabaseTestCase):
         company = models.CompanyModel(**valid_schema)
         self.conn.add(company)
         self.conn.commit()
+
+    def test_flight_model_add(self):
+        valid_company = models.CompanyModel(**payloads.CompanyPayload().model_dump())
+        valid_aircraft = models.AircraftModel(**payloads.AircraftPayload().model_dump())
+        valid_country_1 = models.CountryModel(**payloads.CountryPayload(name='Russia').model_dump())
+        valid_country_2 = models.CountryModel(**payloads.CountryPayload(name='Israel').model_dump())
+        valid_mar1 = models.AirportModel(**payloads.AirportPayload(country=valid_country_1, id=1, iata='SVO', icao='UUEE').model_dump())
+        valid_mar2 = models.AirportModel(**payloads.AirportPayload(country=valid_country_2, id=2, iata='TLV', icao='TTLV').model_dump())
+
+        valid_flight_schema = payloads.FlightPayload(
+            company=valid_company,
+            aircraft=valid_aircraft,
+            mar1=valid_mar1,
+            mar2=valid_mar2,
+        ).model_dump()
+
+        flight = models.FlightModel(**valid_flight_schema)
+        self.conn.add(flight)
+        self.conn.commit()
+        self.conn.refresh(flight)
+
+        self.assertEqual(flight.mar1.iata, 'SVO')
+        self.assertEqual(flight.mar2.iata, 'TLV')

@@ -1,4 +1,6 @@
-from typing import Optional, Sequence
+from datetime import datetime
+from typing import Optional, Sequence, Literal
+from enum import Enum
 
 from sqlalchemy import ForeignKey, String, DECIMAL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -54,3 +56,70 @@ class CompanyModel(Base):
     url_register: Mapped[Optional[str]]
 
 
+class Direction(Enum):
+    arrival = 'arrival'
+    departure = 'departure'
+
+
+class FlightModel(Base):
+    __tablename__ = 'flights'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    orig_id: Mapped[int] = mapped_column(unique=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id', ondelete='set null'))
+
+    mar1_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
+    mar2_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
+    mar3_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
+    mar4_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
+    mar5_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
+    aircraft_id: Mapped[int] = mapped_column(ForeignKey('aircrafts.id', ondelete='set null'), nullable=True)
+
+    direction: Mapped[Direction]
+    number: Mapped[int]
+    date: Mapped[datetime]
+    main_id: Mapped[Optional[int]]
+    way_time: Mapped[Optional[int]]
+    # check-in
+    chin_start: Mapped[Optional[datetime]]
+    chin_end: Mapped[Optional[datetime]]
+    chin_start_et: Mapped[Optional[datetime]]
+    chin_end_et: Mapped[Optional[datetime]]
+    chin_id: Mapped[Optional[str]]
+    # boarding
+    boarding_start: Mapped[Optional[datetime]]
+    boarding_end: Mapped[Optional[datetime]]
+    gate_id: Mapped[Optional[str]]
+    gate_id_prev: Mapped[Optional[str]]
+    # terminal
+    term_local: Mapped[Optional[str]]
+    term_local_prev: Mapped[Optional[str]]
+    # bag belt
+    bbel_id: Mapped[Optional[str]]
+    bbel_id_prev: Mapped[Optional[str]]
+    bbel_start: Mapped[Optional[datetime]]
+    bbel_start_et: Mapped[Optional[datetime]]
+    bbel_end: Mapped[Optional[datetime]]
+    # schedule
+    sked_local: Mapped[datetime]
+    sked_other: Mapped[datetime]
+    # landing / takeoff
+    at_local: Mapped[Optional[datetime]]
+    at_local_et: Mapped[Optional[datetime]]
+    at_other: Mapped[Optional[datetime]]
+    at_other_et: Mapped[Optional[datetime]]
+    takeoff_et: Mapped[Optional[datetime]]
+    # departure / arrival to pk
+    otpr: Mapped[Optional[datetime]]
+    prb: Mapped[Optional[datetime]]
+    # status
+    status_id: Mapped[Optional[int]]
+    status_code: Mapped[Optional[int]]
+
+    company = relationship('CompanyModel', lazy='joined')
+    aircraft = relationship('AircraftModel', lazy='joined')
+    mar1 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar1_id == AirportModel.id")
+    mar2 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar2_id == AirportModel.id")
+    mar3 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar3_id == AirportModel.id")
+    mar4 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar4_id == AirportModel.id")
+    mar5 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar5_id == AirportModel.id")
