@@ -9,19 +9,20 @@ class BaseEntity(BaseModel):
 
     class Config:
         frozen = True
+        from_attributes = True
 
 
-class AircraftModel(BaseEntity):
+class AircraftSchema(BaseEntity):
     orig_id: int | None = Field(alias='id')
     name: str | None = None
 
 
-class CountryModel(BaseEntity):
+class CountrySchema(BaseEntity):
     name: str
     region: str
 
 
-class AirportModel(BaseEntity):
+class AirportSchema(BaseEntity):
     orig_id: int = Field(alias='id')
     iata: str = Field(pattern='[A-Z]{3}')
     icao: str = Field(pattern='[A-Z]{4}')
@@ -33,10 +34,10 @@ class AirportModel(BaseEntity):
     lat: float | None = None
     long: float | None = None
     timezone: str | None = None
-    country: CountryModel
+    country: CountrySchema | None = None
 
 
-class CompanyModel(BaseEntity):
+class CompanySchema(BaseEntity):
     code: str = Field(pattern=r'\w{2}')
     name: str | None = None
     url_buy: Annotated[str, AnyHttpUrl] | None = None
@@ -48,18 +49,18 @@ class Direction(Enum):
     departure = 'departure'
 
 
-class FlightModel(BaseEntity):
+class FlightSchema(BaseEntity):
     orig_id: int = Field(alias='id')
     direction: Annotated[str, Direction]
-    company: CompanyModel
+    company: CompanySchema
     number: int
     date: Annotated[str, datetime]
-    mar1: AirportModel
-    mar2: AirportModel
-    mar3: AirportModel | None = None
-    mar4: AirportModel | None = None
-    mar5: AirportModel | None = None
-    aircraft: AircraftModel
+    mar1: AirportSchema
+    mar2: AirportSchema
+    mar3: AirportSchema | None = None
+    mar4: AirportSchema | None = None
+    mar5: AirportSchema | None = None
+    aircraft: AircraftSchema
     main_id: int | None = None
     way_time: int | None = None
     # check-in
