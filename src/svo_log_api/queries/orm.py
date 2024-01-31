@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Iterable
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
@@ -14,7 +14,7 @@ from .. import utils
 class SyncOrm:
 
     @staticmethod
-    def upsert_aircrafts(conn: Session, data: Sequence[BaseModel]) -> Sequence[models.AircraftModel]:
+    def upsert_aircrafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
         unique_aircrafts = utils.unique_schemas(data, unique_keys=['orig_id'])
 
         stmt = (
@@ -33,7 +33,7 @@ class SyncOrm:
         return res.scalars().all()
 
     @staticmethod
-    def upsert_countries(conn: Session, data: Sequence[BaseModel]) -> Sequence[models.CountryModel]:
+    def upsert_countries(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.CountryModel]:
         unique_countries = utils.unique_schemas(data, unique_keys=['name'])
 
         stmt = (
@@ -52,7 +52,7 @@ class SyncOrm:
         return res.scalars().all()
 
     @staticmethod
-    def upsert_airports(conn: Session, data: Sequence[schemas.AirportSchema]) -> Sequence[models.AirportModel]:
+    def upsert_airports(conn: Session, data: Iterable[schemas.AirportSchema]) -> Sequence[models.AirportModel]:
         unique_airports = utils.unique_schemas(data, unique_keys=['orig_id', 'iata', 'icao'])
 
         countries = [a.country for a in unique_airports if a.country is not None]
@@ -76,7 +76,7 @@ class SyncOrm:
         return res.scalars().all()
 
     @staticmethod
-    def upsert_companies(conn: Session, data: Sequence[schemas.CompanySchema]) -> Sequence[models.CompanyModel]:
+    def upsert_companies(conn: Session, data: Iterable[schemas.CompanySchema]) -> Sequence[models.CompanyModel]:
         unique_companies = utils.unique_schemas(data, unique_keys=['iata'])
 
         stmt = (
@@ -95,7 +95,7 @@ class SyncOrm:
         return res.scalars().all()
 
     @staticmethod
-    def upsert_flights(conn: Session, data: Sequence[schemas.FlightSchema]) -> Sequence[models.FlightModel]:
+    def upsert_flights(conn: Session, data: Iterable[schemas.FlightSchema]) -> Sequence[models.FlightModel]:
         unique_flights = utils.unique_schemas(data, unique_keys=['orig_id'])
 
         relations = defaultdict(list)
