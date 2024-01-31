@@ -6,6 +6,7 @@ from sqlalchemy import ForeignKey, String, DECIMAL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
+from .field_types import created_at, updated_at
 
 
 class AircraftModel(Base):
@@ -15,6 +16,8 @@ class AircraftModel(Base):
     orig_id: Mapped[Optional[int]] = mapped_column(unique=True, nullable=True)
     name: Mapped[Optional[str]]
 
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
 class CountryModel(Base):
     __tablename__ = 'countries'
@@ -22,6 +25,9 @@ class CountryModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     region: Mapped[str]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
     airports = relationship('AirportModel', back_populates='country')
 
@@ -43,6 +49,9 @@ class AirportModel(Base):
     timezone: Mapped[Optional[str]]
     country_id: Mapped[int] = mapped_column(ForeignKey('countries.id', ondelete='set null'))
 
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
     country = relationship('CountryModel', back_populates='airports', lazy='joined')
 
 
@@ -54,6 +63,9 @@ class CompanyModel(Base):
     name: Mapped[Optional[str]]
     url_buy: Mapped[Optional[str]]
     url_register: Mapped[Optional[str]]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
 
 class Direction(Enum):
@@ -115,6 +127,9 @@ class FlightModel(Base):
     # status
     status_id: Mapped[Optional[int]]
     status_code: Mapped[Optional[int]]
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
 
     company = relationship('CompanyModel', lazy='joined')
     aircraft = relationship('AircraftModel', lazy='joined')
