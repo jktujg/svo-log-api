@@ -14,124 +14,165 @@ from .. import utils
 class SyncOrm:
 
     @staticmethod
-    def upsert_aircrafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
-        unique_aircrafts = utils.unique_schemas(data, unique_keys=['orig_id'])
+    def upsert_aircarafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
+        mapped_aircrafts = {a.orig_id: a for a in data}
 
-        stmt = (
-            insert(models.AircraftModel)
-            .returning(models.AircraftModel)
-            .values([a.model_dump() for a in unique_aircrafts])
-        )
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.AircraftModel.__table__.columns.orig_id],
-            set_=dict(name=stmt.excluded.name)
+        query = (
+            select(models.AircraftModel)
+            .filter(models.AircraftModel.orig_id.in_(list(mapped_aircrafts)))
         )
 
-        res = conn.execute(stmt)
+        existed_aircrafts = conn.execute(query).scalars().all()
+
+        for aircraft in existed_aircrafts:
+            if aircraft.name != (new_name := mapped_aircrafts[aircraft.orig_id].name):
+                aircraft.name = new_name
+            mapped_aircrafts.pop(aircraft.orig_id)
+
+        new_aircrafts = [models.AircraftModel(**a.model_dump()) for a in mapped_aircrafts.values()]
+        conn.add_all(new_aircrafts)
         conn.commit()
 
-        return res.scalars().all()
+        return list(existed_aircrafts) + new_aircrafts
+
 
     @staticmethod
     def upsert_countries(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.CountryModel]:
-        unique_countries = utils.unique_schemas(data, unique_keys=['name'])
+        mapped_countries = {c.name: c for c in data}
 
-        stmt = (
-            insert(models.CountryModel)
-            .returning(models.CountryModel)
-            .values([c.model_dump() for c in unique_countries])
-        )
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.CountryModel.__table__.columns.name],
-            set_=dict(region=stmt.excluded.region),
+        query = (
+            select(models.CountryModel)
+            .filter(models.CountryModel.name.in_(list(mapped_countries)))
         )
 
-        res = conn.execute(stmt)
+        existed_countries = conn.execute(query).scalars().all()
+        for country in existed_countries:
+            if country.region != (new_region := mapped_countries[country.name].region):
+                country.region = new_region
+            mapped_countries.pop(country.name)
+
+        new_countries = [models.CountryModel(**c.model_dump()) for c in mapped_countries.values()]
+        conn.add_all(new_countries)
         conn.commit()
 
-        return res.scalars().all()
+        return list(existed_countries) + new_countries
+
 
     @staticmethod
     def upsert_airports(conn: Session, data: Iterable[schemas.AirportSchema]) -> Sequence[models.AirportModel]:
-        unique_airports = utils.unique_schemas(data, unique_keys=['orig_id', 'iata', 'icao'])
+        mapped_airports = {a.iata: a for a in data}
 
-        countries = [a.country for a in unique_airports if a.country is not None]
-        if countries:
-            SyncOrm.upsert_countries(conn=conn, data=countries)
-
-        stmt = (
-            insert(models.AirportModel)
-            .returning(models.AirportModel)
-            .values([a.model_dump(exclude={'country'}) | {'country_id': select(models.CountryModel.id).where(models.CountryModel.name == a.country.name)} for a in unique_airports])
+        query = (
+            select(models.AirportModel)
+            .filter(models.AirportModel.iata.in_(list(mapped_airports)))
         )
 
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.AirportModel.__table__.columns.iata],
-            set_={column_name: getattr(stmt.excluded, column_name) for column_name in utils.get_columns(models.AirportModel).keys()}
-        )
+        countries = {c.name: c for c in SyncOrm.upsert_countries(conn, [a.country for a in mapped_airports.values()])}
 
-        res = conn.execute(stmt)
+        existed_airports = conn.execute(query).scalars().all()
+        update_columns = utils.get_columns(models.AirportModel, exclude={'country_id', 'created_at', 'updated_at'})
+        for airport in existed_airports:
+
+            for column in update_columns:
+                if getattr(airport, column) != (new_value := getattr(mapped_airports[airport.iata], column)):
+                    setattr(airport, column, new_value)
+
+            country_name = mapped_airports[airport.iata].country.name
+            airport.country = countries[country_name]
+
+            mapped_airports.pop(airport.iata)
+
+        new_airports = [models.AirportModel(**a.model_dump(exclude='country'), country=countries[a.country.name]) for a in mapped_airports.values()]
+        conn.add_all(new_airports)
         conn.commit()
 
-        return res.scalars().all()
+        return list(existed_airports) + new_airports
+
 
     @staticmethod
     def upsert_companies(conn: Session, data: Iterable[schemas.CompanySchema]) -> Sequence[models.CompanyModel]:
-        unique_companies = utils.unique_schemas(data, unique_keys=['iata'])
+        mapped_company = {c.iata: c for c in data}
 
-        stmt = (
-            insert(models.CompanyModel)
-            .returning(models.CompanyModel)
-            .values([c.model_dump() for c in unique_companies])
-        )
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.CompanyModel.__table__.columns.iata],
-            set_={column_name: getattr(stmt.excluded, column_name) for column_name in utils.get_columns(models.CompanyModel).keys()}
+        query = (
+            select(models.CompanyModel)
+            .filter(models.CompanyModel.iata.in_(list(mapped_company)))
         )
 
-        res = conn.execute(stmt)
+        existed_companies = conn.execute(query).scalars().all()
+        update_columns = utils.get_columns(models.CompanyModel, exclude={'created_at', 'updated_at'})
+        for company in existed_companies:
+
+            for column in update_columns:
+                if getattr(company, column) != (new_value := getattr(mapped_company[company.iata], column)):
+                    setattr(company, column, new_value)
+
+            mapped_company.pop(company.iata)
+
+        new_companies = [models.CompanyModel(**c.model_dump()) for c in mapped_company.values()]
+        conn.add_all(new_companies)
         conn.commit()
 
-        return res.scalars().all()
+        return list(existed_companies) + new_companies
 
     @staticmethod
     def upsert_flights(conn: Session, data: Iterable[schemas.FlightSchema]) -> Sequence[models.FlightModel]:
-        unique_flights = utils.unique_schemas(data, unique_keys=['orig_id'])
+        mapped_flights = {f.orig_id: f for f in data}
+        companies, aircrafts, airports = set(), set(), set()
 
-        relations = defaultdict(list)
-        for flight in unique_flights:
-            relations['companies'].append(flight.company)
-            relations['aircrafts'].append(flight.aircraft)
+        for flight in mapped_flights.values():
+            companies.add(flight.company)
+            aircrafts.add(flight.aircraft)
             for i in range(1, 6):
-                relations['airports'].append(getattr(flight, f'mar{i}'))
+                if getattr(flight, f'mar{i}', None):
+                    airports.add(getattr(flight, f'mar{i}'))
 
-        not_none = lambda x: x is not None
-        companies = {c.iata: c for c in SyncOrm.upsert_companies(conn, filter(not_none, relations['companies']))}
-        aircrafts = {a.orig_id: a for a in SyncOrm.upsert_aircrafts(conn, filter(not_none, relations['aircrafts']))}
-        airports = {a.iata: a for a in SyncOrm.upsert_airports(conn, filter(not_none, relations['airports']))}
+        companies_models = {c.iata: c for c in SyncOrm.upsert_companies(conn, companies)}
+        aircrafts_models = {a.orig_id: a for a in SyncOrm.upsert_aircarafts(conn, aircrafts)}
+        airports_models = {a.iata: a for a in SyncOrm.upsert_airports(conn, airports)}
 
-        stmt = (
-            insert(models.FlightModel)
-            .returning(models.FlightModel)
-            .values([(
-                f.model_dump(exclude={'company', 'aircraft', *[f'mar{i}' for i in range(1, 6)]})
-                | dict(company_id=companies[f.company.iata].id,
-                       aircraft_id=aircrafts[f.aircraft.orig_id].id,
-                       mar1_id=airports[f.mar1.iata].id if f.mar1 else None,
-                       mar2_id=airports[f.mar2.iata].id if f.mar2 else None,
-                       mar3_id=airports[f.mar3.iata].id if f.mar3 else None,
-                       mar4_id=airports[f.mar4.iata].id if f.mar4 else None,
-                       mar5_id=airports[f.mar5.iata].id if f.mar5 else None,
-                       )
-            ) for f in unique_flights])
+        query = (
+            select(models.FlightModel)
+            .filter(models.FlightModel.orig_id.in_(list(mapped_flights)))
         )
 
-        stmt = stmt.on_conflict_do_update(
-            index_elements=[models.FlightModel.__table__.columns.orig_id],
-            set_={column_name: getattr(stmt.excluded, column_name) for column_name in utils.get_columns(models.FlightModel).keys()}
-        )
+        existed_flights = conn.execute(query).scalars().all()
+        update_columns = utils.get_columns(models.FlightModel, exclude=(
+            'company_id',
+            *[f'mar{i}_id' for i in range(1, 6)],
+            'aircraft_id',
+            'created_at',
+            'updated_at',
+        ))
 
-        res = conn.execute(stmt)
+        for flight in existed_flights:
+
+            for column in update_columns:
+                if getattr(flight, column) != (new_value := getattr(mapped_flights[flight.orig_id], column)):
+                    setattr(flight, column, new_value)
+
+            flight_schema = mapped_flights[flight.orig_id]
+            flight.company = companies_models[flight_schema.company.iata]
+            flight.aircraft = aircrafts_models[flight_schema.aircraft.orig_id]
+            for i in range(1, 6):
+                attr = f'mar{i}'
+                airport_schema = getattr(flight_schema, attr)
+                if airport_schema is not None:
+                    value = airports_models[airport_schema.iata]
+                    setattr(flight, attr, value)
+
+            mapped_flights.pop(flight.orig_id)
+
+        new_flights = [models.FlightModel(**f.model_dump(
+            exclude={'company', 'aircraft', *[f'mar{i}' for i in range(1, 6)]}),
+                                          company=companies_models[f.company.iata],
+                                          aircraft=aircrafts_models[f.aircraft.orig_id],
+                                          **{f'mar{i}': airports_models[getattr(f, f'mar{i}').iata] for i in range(1, 6)
+                                             if getattr(f, f'mar{i}') is not None}
+                                          )
+                       for f in mapped_flights.values()]
+
+        conn.add_all(new_flights)
         conn.commit()
 
-        return res.scalars().all()
+        return list(existed_flights) + new_flights
+
