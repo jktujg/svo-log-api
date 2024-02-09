@@ -1,12 +1,11 @@
 from datetime import datetime
-from typing import Optional, Sequence, Literal
-from enum import Enum
+from typing import Optional
 
 from sqlalchemy import ForeignKey, String, DECIMAL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
-from .field_types import created_at, updated_at
+from .field_types import created_at, updated_at, Direction
 
 
 class AircraftModel(Base):
@@ -19,26 +18,29 @@ class AircraftModel(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
+    flights: Mapped[list['FlightModel']] = relationship(back_populates='aircraft')
+
+
 class CountryModel(Base):
     __tablename__ = 'countries'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
-    region: Mapped[str]
+    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    region: Mapped[Optional[str]] = None
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    airports = relationship('AirportModel', back_populates='country')
+    airports: Mapped[list['AirportModel']] = relationship(back_populates='country')
 
 
 class AirportModel(Base):
     __tablename__ = 'airports'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    orig_id: Mapped[int] = mapped_column(unique=True)
+    orig_id: Mapped[int] = mapped_column(unique=False)
     iata: Mapped[str] = mapped_column(String(3), unique=True)
-    icao: Mapped[str] = mapped_column(String(4), unique=True)
+    icao: Mapped[str] = mapped_column(String(4), unique=False)
     code_ru: Mapped[Optional[str]] = mapped_column(String(3))
     name: Mapped[str]
     name_ru: Mapped[str]
@@ -52,7 +54,7 @@ class AirportModel(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    country = relationship('CountryModel', back_populates='airports', lazy='joined')
+    country: Mapped['CountryModel'] = relationship(back_populates='airports', lazy='joined')
 
 
 class CompanyModel(Base):
@@ -67,10 +69,7 @@ class CompanyModel(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-
-class Direction(Enum):
-    arrival = 'arrival'
-    departure = 'departure'
+    flights: Mapped[list['FlightModel']] = relationship(back_populates='company')
 
 
 class FlightModel(Base):
@@ -78,8 +77,8 @@ class FlightModel(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     orig_id: Mapped[int] = mapped_column(unique=True)
-    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id', ondelete='set null'))
 
+    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id', ondelete='set null'))
     mar1_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
     mar2_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
     mar3_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
@@ -113,8 +112,8 @@ class FlightModel(Base):
     bbel_start_et: Mapped[Optional[datetime]]
     bbel_end: Mapped[Optional[datetime]]
     # schedule
-    sked_local: Mapped[datetime]
-    sked_other: Mapped[datetime]
+    sked_local: Mapped[Optional[datetime]]
+    sked_other: Mapped[Optional[datetime]]
     # landing / takeoff
     at_local: Mapped[Optional[datetime]]
     at_local_et: Mapped[Optional[datetime]]
@@ -131,10 +130,10 @@ class FlightModel(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    company = relationship('CompanyModel', lazy='joined')
-    aircraft = relationship('AircraftModel', lazy='joined')
-    mar1 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar1_id == AirportModel.id")
-    mar2 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar2_id == AirportModel.id")
-    mar3 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar3_id == AirportModel.id")
-    mar4 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar4_id == AirportModel.id")
-    mar5 = relationship('AirportModel', lazy='joined', primaryjoin="FlightModel.mar5_id == AirportModel.id")
+    company: Mapped['CompanyModel'] = relationship(lazy='joined', back_populates='flights')
+    aircraft: Mapped['AircraftModel'] = relationship(lazy='joined', back_populates='flights')
+    mar1: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar1_id == AirportModel.id", backref='mar1_flights')
+    mar2: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar2_id == AirportModel.id", backref='mar2_flights')
+    mar3: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar3_id == AirportModel.id", backref='mar3_flights')
+    mar4: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar4_id == AirportModel.id", backref='mar4_flights')
+    mar5: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar5_id == AirportModel.id", backref='mar5_flights')

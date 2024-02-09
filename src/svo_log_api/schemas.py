@@ -1,8 +1,9 @@
-from enum import Enum
+from enum import Enum, StrEnum
 from datetime import datetime
-
 from pydantic import BaseModel, Field, AnyHttpUrl
 from typing import Annotated
+
+from .field_types import Direction
 
 
 class BaseEntity(BaseModel):
@@ -19,14 +20,14 @@ class AircraftSchema(BaseEntity):
 
 class CountrySchema(BaseEntity):
     name: str
-    region: str
+    region: str | None = None
 
 
 class AirportSchema(BaseEntity):
     orig_id: int = Field(alias='id')
-    iata: str = Field(pattern='[A-Z]{3}')
-    icao: str = Field(pattern='[A-Z]{4}')
-    code_ru: str | None = Field(pattern='[А-Я]{3}')
+    iata: str = Field(pattern='^[A-Z]{3}$')
+    icao: str = Field(pattern='^[A-Z]{4}$')
+    code_ru: str | None = Field(pattern=r'^([А-Я]{3})|.{0}$')
     name: str
     name_ru: str
     city_ru: str
@@ -38,25 +39,20 @@ class AirportSchema(BaseEntity):
 
 
 class CompanySchema(BaseEntity):
-    iata: str = Field(pattern=r'\w{2}', alias='code')
+    iata: str = Field(pattern=r'^\w{2}$', alias='code')
     name: str | None = None
     url_buy: Annotated[str, AnyHttpUrl] | None = None
     url_register: Annotated[str, AnyHttpUrl] | None = None
 
 
-class Direction(Enum):
-    arrival = 'arrival'
-    departure = 'departure'
-
-
 class FlightSchema(BaseEntity):
     orig_id: int = Field(alias='id')
-    direction: Annotated[str, Direction]
+    direction: Direction
     company: CompanySchema
     number: int
-    date: Annotated[str, datetime]
-    mar1: AirportSchema
-    mar2: AirportSchema
+    date: datetime
+    mar1: AirportSchema | None = None
+    mar2: AirportSchema | None = None
     mar3: AirportSchema | None = None
     mar4: AirportSchema | None = None
     mar5: AirportSchema | None = None
@@ -64,14 +60,14 @@ class FlightSchema(BaseEntity):
     main_id: int | None = None
     way_time: int | None = None
     # check-in
-    chin_start: Annotated[str | None, datetime] = None
-    chin_end: Annotated[str | None, datetime] = None
-    chin_start_et: Annotated[str | None, datetime] = None
-    chin_end_et: Annotated[str | None, datetime] = None
+    chin_start: datetime | None = None
+    chin_end: datetime | None = None
+    chin_start_et: datetime | None = None
+    chin_end_et: datetime | None = None
     chin_id: str | None = None
     # boarding
-    boarding_start: Annotated[str | None, datetime] = None
-    boarding_end: Annotated[str | None, datetime] = None
+    boarding_start: datetime | None = None
+    boarding_end: datetime | None = None
     gate_id: str | None = None
     gate_id_prev: str | None = None
     # terminal
@@ -80,21 +76,21 @@ class FlightSchema(BaseEntity):
     # bag belt
     bbel_id: str | None = None
     bbel_id_prev: str | None = None
-    bbel_start: Annotated[str | None, datetime] = None
-    bbel_start_et: Annotated[str | None, datetime] = None
-    bbel_end: Annotated[str | None, datetime] = None
+    bbel_start: datetime | None = None
+    bbel_start_et: datetime | None = None
+    bbel_end: datetime | None = None
     # schedule
-    sked_local: Annotated[str, datetime]
-    sked_other: Annotated[str, datetime]
+    sked_local: datetime | None = None
+    sked_other: datetime | None = None
     # landing / takeoff
-    at_local: Annotated[str | None, datetime] = None
-    at_local_et: Annotated[str | None, datetime] = None
-    at_other: Annotated[str | None, datetime] = None
-    at_other_et: Annotated[str | None, datetime] = None
-    takeoff_et: Annotated[str | None, datetime] = None
+    at_local: datetime | None = None
+    at_local_et: datetime | None = None
+    at_other: datetime | None = None
+    at_other_et: datetime | None = None
+    takeoff_et: datetime | None = None
     # departure / arrival to pk
-    otpr: Annotated[str | None, datetime] = None
-    prb: Annotated[str | None, datetime] = None
+    otpr: datetime | None = None
+    prb: datetime | None = None
     # status
     status_id: int | None = None
     status_code: int | None = None
