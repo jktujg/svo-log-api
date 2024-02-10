@@ -14,7 +14,7 @@ from .. import utils
 class SyncOrm:
 
     @staticmethod
-    def upsert_aircarafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
+    def upsert_aircrafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
         mapped_aircrafts = {a.orig_id: a for a in data}
 
         query = (
@@ -127,7 +127,7 @@ class SyncOrm:
                     airports.add(getattr(flight, f'mar{i}'))
 
         companies_models = {c.iata: c for c in SyncOrm.upsert_companies(conn, companies)}
-        aircrafts_models = {a.orig_id: a for a in SyncOrm.upsert_aircarafts(conn, aircrafts)}
+        aircrafts_models = {a.orig_id: a for a in SyncOrm.upsert_aircrafts(conn, aircrafts)}
         airports_models = {a.iata: a for a in SyncOrm.upsert_airports(conn, airports)}
 
         query = (

@@ -34,14 +34,13 @@ class TestModels(DatabaseTestCase):
         self.assertEqual(result_2[0].code_ru, airport_2.code_ru)
 
     def test_companies_upsert(self):
-        company_1 = payloads.CompanyPayload(iata='aa', name='old')
-        company_2 = payloads.CompanyPayload(iata='aa', name='new')
+        company_1 = payloads.CompanyPayload(name='old')
+        company_2 = payloads.CompanyPayload(name='new')
 
         result_1 = SyncOrm.upsert_companies(self.conn, [company_1])
         result_2 = SyncOrm.upsert_companies(self.conn, [company_2])
 
         self.assertEqual(result_2[0].name, company_2.name)
-
 
     def test_flights_upsert(self):
         flight_1 = payloads.FlightPayload(id=1, chin_id='old')

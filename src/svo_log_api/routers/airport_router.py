@@ -21,7 +21,7 @@ def get_session(**params):
 
 @airport_router.put('/aircrafts/')
 def upsert_aircrafts(conn: Annotated[Session, Depends(get_session(expire_on_commit=False))], aircrafts: list[schemas.AircraftSchema]):
-    SyncOrm.upsert_aircarafts(conn, aircrafts)
+    SyncOrm.upsert_aircrafts(conn, aircrafts)
 
 
 @airport_router.put('/countries/')
