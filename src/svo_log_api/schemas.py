@@ -23,6 +23,13 @@ class CountrySchema(BaseEntity):
     region: str | None = None
 
 
+class CitySchema(BaseEntity):
+    name: str = Field(alias='name_en')
+    name_ru: str
+    timezone: str
+    country: CountrySchema
+
+
 class AirportSchema(BaseEntity):
     orig_id: int = Field(alias='id')
     iata: str = Field(pattern='^[A-Z]{3}$')
@@ -30,12 +37,9 @@ class AirportSchema(BaseEntity):
     code_ru: str | None = Field(pattern=r'^([А-Я]{3})|.{0}$')
     name: str
     name_ru: str
-    city_ru: str
-    city_en: str
     lat: float | None = None
     long: float | None = None
-    timezone: str | None = None
-    country: CountrySchema | None = None
+    city: CitySchema
 
 
 class CompanySchema(BaseEntity):

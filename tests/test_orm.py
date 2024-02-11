@@ -51,3 +51,12 @@ class TestModels(DatabaseTestCase):
 
         self.assertEqual(result2[0].orig_id, flight_1.orig_id)      # `orig_id` is aliased `id`
         self.assertEqual(result2[0].chin_id, flight_2.chin_id)
+
+    def test_cities_upsert(self):
+        city_1 = payloads.CityPayload(name_en='Moscow', timezone='A')
+        city_2 = payloads.CityPayload(name_en='Moscow', timezone='B')
+
+        result_1 = SyncOrm.upsert_cities(self.conn, [city_1])
+        result_2 = SyncOrm.upsert_cities(self.conn, [city_2])
+
+        self.assertEqual(result_2[0].timezone, 'B')

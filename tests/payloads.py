@@ -19,6 +19,13 @@ class CountryPayload(Payload):
     region: SkipValidation[Any] = 'DOMESTIC'
 
 
+class CityPayload(Payload):
+    name: SkipValidation[Any] = Field(default='Moscow', alias='name_en')
+    name_ru: SkipValidation[Any] = 'Москва'
+    country: SkipValidation[Any] = CountryPayload()
+    timezone: SkipValidation[Any] = 'America/Havana'
+
+
 class AirportPayload(Payload):
     orig_id: SkipValidation[Any] = Field(default=439, alias='id')
     iata: SkipValidation[Any] = 'VRA'
@@ -26,12 +33,9 @@ class AirportPayload(Payload):
     code_ru: SkipValidation[Any] = 'ВРА'
     name: SkipValidation[Any] = 'Хуан\xa0Гуальберто\xa0Гомес'
     name_ru: SkipValidation[Any] = 'Хуан\xa0Гуальберто\xa0Гомес'
-    country: SkipValidation[Any] = CountryPayload()
-    city_ru: SkipValidation[Any] = 'Варадеро'
-    city_en: SkipValidation[Any] = 'Varadero'
+    city: SkipValidation[Any] = CityPayload()
     lat: SkipValidation[Any] = 23.039896
     long: SkipValidation[Any] = -81.436943
-    timezone: SkipValidation[Any] = 'America/Havana'
 
 
 class CompanyPayload(Payload):

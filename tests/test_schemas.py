@@ -5,6 +5,7 @@ from src.svo_log_api.schemas import (
     AirportSchema,
     CompanySchema,
     FlightSchema,
+    CitySchema,
 )
 
 from . import payloads
@@ -26,3 +27,6 @@ class TestSchemas(TestCase):
 
     def test_valid_flight_model(self):
         FlightSchema.model_validate(payloads.FlightPayload().model_dump(by_alias=True))
+
+    def test_valid_city_model(self):
+        CitySchema.model_validate(payloads.CityPayload().model_dump(by_alias=True))

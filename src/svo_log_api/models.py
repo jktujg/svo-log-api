@@ -31,7 +31,23 @@ class CountryModel(Base):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    airports: Mapped[list['AirportModel']] = relationship(back_populates='country')
+    cities: Mapped[list['CityModel']] = relationship(back_populates='country')
+
+
+class CityModel(Base):
+    __tablename__ = 'cities'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+    name_ru: Mapped[str] = mapped_column(unique=True)
+    timezone: Mapped[str]
+    country_id: Mapped[int] = mapped_column(ForeignKey('countries.id', ondelete='set null'))
+
+    created_at: Mapped[created_at]
+    updated_at: Mapped[updated_at]
+
+    country: Mapped['CountryModel'] = relationship(back_populates='cities', lazy='joined')
+    airports: Mapped[list['AirportModel']] = relationship(back_populates='city')
 
 
 class AirportModel(Base):
@@ -44,17 +60,14 @@ class AirportModel(Base):
     code_ru: Mapped[Optional[str]] = mapped_column(String(3))
     name: Mapped[str]
     name_ru: Mapped[str]
-    city_ru: Mapped[str]
-    city_en: Mapped[str]
     lat: Mapped[Optional[float]] = mapped_column(DECIMAL(9, 6))
     long: Mapped[Optional[float]] = mapped_column(DECIMAL(9, 6))
-    timezone: Mapped[Optional[str]]
-    country_id: Mapped[int] = mapped_column(ForeignKey('countries.id', ondelete='set null'))
+    city_id: Mapped[int] = mapped_column(ForeignKey('cities.id', ondelete='set null'))
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    country: Mapped['CountryModel'] = relationship(back_populates='airports', lazy='joined')
+    city: Mapped['CityModel'] = relationship(back_populates='airports', lazy='joined')
 
 
 class CompanyModel(Base):

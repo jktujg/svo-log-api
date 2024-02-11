@@ -59,6 +59,40 @@ class SyncOrm:
 
 
     @staticmethod
+    def upsert_cities(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.CityModel]:
+        mapped_cities = {c.name: c for c in data}
+
+        countries = {
+            country.name: country
+            for country
+            in SyncOrm.upsert_countries(conn=conn, data=[c.country for c in mapped_cities.values()])
+        }
+
+        query = (
+            select(models.CityModel)
+            .filter(models.CityModel.name.in_(list(mapped_cities)))
+        )
+
+        existed_cities = conn.execute(query).scalars().all()
+        update_columns = utils.get_columns(models.CityModel, exclude={'country_id', 'created_at', 'updated_at'})
+        for city in existed_cities:
+
+            for column in update_columns:
+                if getattr(city, column) != (new_value := getattr(mapped_cities[city.name], column)):
+                    setattr(city, column, new_value)
+
+            country_name = mapped_cities[city.name].country.name
+            city.country = countries[country_name]
+
+            mapped_cities.pop(city.name)
+
+        new_cities = [models.CityModel(**c.model_dump(exclude='country'), country=countries[c.country.name]) for c in mapped_cities.values()]
+        conn.add_all(new_cities)
+        conn.commit()
+
+        return list(existed_cities) + new_cities
+
+    @staticmethod
     def upsert_airports(conn: Session, data: Iterable[schemas.AirportSchema]) -> Sequence[models.AirportModel]:
         mapped_airports = {a.iata: a for a in data}
 
@@ -67,22 +101,22 @@ class SyncOrm:
             .filter(models.AirportModel.iata.in_(list(mapped_airports)))
         )
 
-        countries = {c.name: c for c in SyncOrm.upsert_countries(conn, [a.country for a in mapped_airports.values()])}
+        cities = {c.name: c for c in SyncOrm.upsert_cities(conn, [a.city for a in mapped_airports.values()])}
 
         existed_airports = conn.execute(query).scalars().all()
-        update_columns = utils.get_columns(models.AirportModel, exclude={'country_id', 'created_at', 'updated_at'})
+        update_columns = utils.get_columns(models.AirportModel, exclude={'city_id', 'created_at', 'updated_at'})
         for airport in existed_airports:
 
             for column in update_columns:
                 if getattr(airport, column) != (new_value := getattr(mapped_airports[airport.iata], column)):
                     setattr(airport, column, new_value)
 
-            country_name = mapped_airports[airport.iata].country.name
-            airport.country = countries[country_name]
+            city_name = mapped_airports[airport.iata].city.name
+            airport.city = cities[city_name]
 
             mapped_airports.pop(airport.iata)
 
-        new_airports = [models.AirportModel(**a.model_dump(exclude='country'), country=countries[a.country.name]) for a in mapped_airports.values()]
+        new_airports = [models.AirportModel(**a.model_dump(exclude='city'), city=cities[a.city.name]) for a in mapped_airports.values()]
         conn.add_all(new_airports)
         conn.commit()
 

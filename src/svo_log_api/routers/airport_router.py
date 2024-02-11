@@ -29,6 +29,11 @@ def upsert_countries(conn: Annotated[Session, Depends(get_session(expire_on_comm
     SyncOrm.upsert_countries(conn, countries)
 
 
+@airport_router.put('/cities/')
+def upsert_cities(conn: Annotated[Session, Depends(get_session(expire_on_commit=False))], cities: list[schemas.CitySchema]):
+    SyncOrm.upsert_cities(conn, cities)
+
+
 @airport_router.put('/airports/')
 def upsert_airports(conn: Annotated[Session, Depends(get_session(expire_on_commit=False))], airports: list[schemas.AirportSchema]):
     SyncOrm.upsert_airports(conn, airports)
