@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine
+import datetime
+from sqlalchemy import create_engine, TIMESTAMP
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from .config.config import settings
 
@@ -13,6 +14,10 @@ session = sessionmaker(bind=engine)
 
 
 class Base(DeclarativeBase):
+    type_annotation_map = {
+        datetime.datetime: TIMESTAMP(timezone=True)
+    }
+
     def __repr__(self) -> str:
         cols = [f'{col}={getattr(self, col)}' for col in self.__table__.columns.keys()]
         return f'<{self.__class__.__name__}({", ".join(cols)})>'
