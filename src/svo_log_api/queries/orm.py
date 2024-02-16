@@ -177,12 +177,14 @@ class SyncOrm:
             'created_at',
             'updated_at',
         ))
+        flights_changelog = []
 
         for flight in existed_flights:
 
             for column in update_columns:
                 if getattr(flight, column) != (new_value := getattr(mapped_flights[flight.orig_id], column)):
                     setattr(flight, column, new_value)
+                    flights_changelog.append(models.FlightsChangelogModel(field=column, new_value=new_value, flight=flight))
 
             flight_schema = mapped_flights[flight.orig_id]
             flight.company = companies_models[flight_schema.company.iata]
@@ -206,6 +208,7 @@ class SyncOrm:
                        for f in mapped_flights.values()]
 
         conn.add_all(new_flights)
+        conn.add_all(flights_changelog)
         conn.commit()
 
         return list(existed_flights) + new_flights

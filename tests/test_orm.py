@@ -1,5 +1,8 @@
+from sqlalchemy import select
+
 from src.svo_log_api import schemas
 from src.svo_log_api.queries.orm import SyncOrm
+from src.svo_log_api import models, schemas
 
 from . import payloads
 from .fixtures import DatabaseTestCase
@@ -51,6 +54,24 @@ class TestModels(DatabaseTestCase):
 
         self.assertEqual(result2[0].orig_id, flight_1.orig_id)      # `orig_id` is aliased `id`
         self.assertEqual(result2[0].chin_id, flight_2.chin_id)
+
+    def test_flights_upsert_changelog_update(self):
+        # wrap payloads in original schemas because payloads skip validation and thus converting
+        # (in this case str dates to datetime)
+        flight_1 = schemas.FlightSchema(**payloads.FlightPayload(id=1, chin_id='old').model_dump(by_alias=True))
+        flight_2 = schemas.FlightSchema(**payloads.FlightPayload(id=1, chin_id='new').model_dump(by_alias=True))
+
+        result1 = SyncOrm.upsert_flights(self.conn, [flight_1])
+        result2 = SyncOrm.upsert_flights(self.conn, [flight_2])
+
+        query = select(models.FlightsChangelogModel).filter(models.FlightsChangelogModel.flight_id == 1)
+        changelog = self.conn.execute(query).scalars().all()
+
+        self.assertEqual(len(changelog), 1)
+        self.assertEqual(changelog[0].field, 'chin_id')
+        self.assertEqual(changelog[0].new_value, flight_2.chin_id)
+
+        # self.assertListEqual([changelog.field, changelog.new_value], ['chin_id', flight_2.chin_id])
 
     def test_cities_upsert(self):
         city_1 = payloads.CityPayload(name_en='Moscow', timezone='A')
