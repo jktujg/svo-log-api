@@ -1,15 +1,16 @@
-from pydantic import BaseModel, Field
-from configparser import ConfigParser
 from pathlib import Path
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-class Settings(BaseModel):
-    DB_HOST: str = Field(alias='db_host')
-    DB_PORT: str = Field(alias='db_port')
-    DB_USER: str = Field(alias='db_user')
-    DB_PASS: str = Field(alias='db_pass')
-    DB_NAME: str = Field(alias='db_name')
-    TEST_DB_NAME: str = Field(alias='test_db_name')
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=Path(__file__).parent / '.env')
+
+    DB_HOST: str
+    DB_PORT: str
+    DB_USER: str
+    DB_PASS: str
+    DB_NAME: str
+    TEST_DB_NAME: str
 
     @property
     def DATABASE_URL_psycopg(self):
@@ -24,9 +25,4 @@ class Settings(BaseModel):
         return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASS}@{self.DB_HOST}:{self.DB_PORT}/{self.TEST_DB_NAME}"
 
 
-config = ConfigParser()
-config.read(Path(__file__).parent / 'env.ini')
-settings = Settings(**config['DataBase'], **config['TestDataBase'])
-
-
-
+settings = Settings()
