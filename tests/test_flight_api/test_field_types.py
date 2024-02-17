@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .fixtures import DatabaseTestCase
-from src.svo_log_api import field_types
-from src.svo_log_api.database import Base
+from tests.fixtures import DatabaseTestCase
+from src.svo_log_api.flights_api import field_types
+from src.svo_log_api.models import Base
 
 
 class FieldModel(Base):

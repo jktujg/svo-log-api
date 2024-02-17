@@ -1,11 +1,10 @@
 from sqlalchemy import select
 
-from src.svo_log_api import schemas
-from src.svo_log_api.queries.orm import SyncOrm
-from src.svo_log_api import models, schemas
+from src.svo_log_api.flights_api.queries.orm import SyncOrm
+from src.svo_log_api.flights_api import models, schemas
 
-from . import payloads
-from .fixtures import DatabaseTestCase
+from tests.test_flight_api import payloads
+from tests.fixtures import DatabaseTestCase
 
 
 class TestModels(DatabaseTestCase):

@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, drop_database, create_database
 from unittest import TestCase
 
-from src.svo_log_api.config.config import settings
+from src.svo_log_api.config import settings
 from src.svo_log_api import models
 
 

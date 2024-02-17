@@ -1,4 +1,3 @@
-from enum import Enum, StrEnum
 from datetime import datetime
 from pydantic import BaseModel, Field, AnyHttpUrl
 from typing import Annotated

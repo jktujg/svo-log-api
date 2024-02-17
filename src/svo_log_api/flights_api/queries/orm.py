@@ -1,14 +1,10 @@
 from typing import Sequence, Iterable
 
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from pydantic import BaseModel
-from collections import defaultdict
 
-from .. import models
-from .. import schemas
-from .. import utils
+from .. import models, schemas, utils
 
 
 class SyncOrm:
@@ -184,7 +180,8 @@ class SyncOrm:
             for column in update_columns:
                 if getattr(flight, column) != (new_value := getattr(mapped_flights[flight.orig_id], column)):
                     setattr(flight, column, new_value)
-                    flights_changelog.append(models.FlightsChangelogModel(field=column, new_value=new_value, flight=flight))
+                    flights_changelog.append(
+                        models.FlightsChangelogModel(field=column, new_value=new_value, flight=flight))
 
             flight_schema = mapped_flights[flight.orig_id]
             flight.company = companies_models[flight_schema.company.iata]

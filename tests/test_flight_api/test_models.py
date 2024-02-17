@@ -1,8 +1,7 @@
-from unittest import TestCase
-from src.svo_log_api import models
+from src.svo_log_api.flights_api import models
 
-from . import payloads
-from .fixtures import DatabaseTestCase
+from tests.test_flight_api import payloads
+from tests.fixtures import DatabaseTestCase
 
 
 class TestModels(DatabaseTestCase):

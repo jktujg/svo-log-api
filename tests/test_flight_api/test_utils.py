@@ -1,5 +1,5 @@
 from unittest import TestCase
-from src.svo_log_api import utils
+from src.svo_log_api.flights_api import utils
 from pydantic import BaseModel
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 

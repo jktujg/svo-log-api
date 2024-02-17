@@ -1,5 +1,5 @@
 from unittest import TestCase
-from src.svo_log_api.schemas import (
+from src.svo_log_api.flights_api.schemas import (
     AircraftSchema,
     CountrySchema,
     AirportSchema,
@@ -8,7 +8,7 @@ from src.svo_log_api.schemas import (
     CitySchema,
 )
 
-from . import payloads
+from tests.test_flight_api import payloads
 
 
 class TestSchemas(TestCase):
