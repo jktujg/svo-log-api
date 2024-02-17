@@ -5,17 +5,10 @@ from sqlalchemy.orm import Session
 
 from . import schemas
 from .queries.orm import SyncOrm
-from ..database import session
+from ..dependencies import get_session
 
 
 airport_router = APIRouter()
-
-
-def get_session(**params):
-    def session_gen():
-        with session(**params) as conn:
-            yield conn
-    return session_gen
 
 
 @airport_router.put('/aircrafts/')
