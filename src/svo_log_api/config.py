@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
     TEST_DB_NAME: str
+    #routing
+    ROOT_PATH: str
+    AIRPORT_PATH: str
+    AUTH_PATH: str
 
     @property
     def DATABASE_URL_psycopg(self):
