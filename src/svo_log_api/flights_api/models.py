@@ -5,7 +5,8 @@ from sqlalchemy import ForeignKey, String, DECIMAL
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..models import Base
-from .field_types import created_at, updated_at, Direction
+from .field_types import Direction
+from ..fields import created_at, updated_at
 
 
 class AircraftModel(Base):

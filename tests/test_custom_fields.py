@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
 from tests.fixtures import DatabaseTestCase
-from src.svo_log_api.flights_api import field_types
+from src.svo_log_api import fields
 from src.svo_log_api.models import Base
 
 
@@ -11,8 +11,8 @@ class FieldModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     data: Mapped[str] = mapped_column(nullable=True)
 
-    created_at: Mapped[field_types.created_at]
-    updated_at: Mapped[field_types.updated_at]
+    created_at: Mapped[fields.created_at]
+    updated_at: Mapped[fields.updated_at]
 
 
 class TestFieldTypes(DatabaseTestCase):
