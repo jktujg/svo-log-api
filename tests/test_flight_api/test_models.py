@@ -1,10 +1,10 @@
 from src.svo_log_api.flights_api import models
 
 from tests.test_flight_api import payloads
-from tests.fixtures import DatabaseTestCase
+from tests.fixtures import AppTestCase
 
 
-class TestModels(DatabaseTestCase):
+class TestModels(AppTestCase):
     def test_aircraft_model_add(self):
         valid_schema = payloads.AircraftPayload().model_dump()
         aircraft = models.AircraftModel(**valid_schema)

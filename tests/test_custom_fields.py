@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column
 
-from tests.fixtures import DatabaseTestCase
+from tests.fixtures import AppTestCase
 from src.svo_log_api import fields
 from src.svo_log_api.models import Base
 
@@ -15,7 +15,7 @@ class FieldModel(Base):
     updated_at: Mapped[fields.updated_at]
 
 
-class TestFieldTypes(DatabaseTestCase):
+class TestFieldTypes(AppTestCase):
     def test_created_at(self):
         record = FieldModel()
 

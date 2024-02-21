@@ -4,10 +4,10 @@ from src.svo_log_api.flights_api.queries.orm import SyncOrm
 from src.svo_log_api.flights_api import models, schemas
 
 from tests.test_flight_api import payloads
-from tests.fixtures import DatabaseTestCase
+from tests.fixtures import AppTestCase
 
 
-class TestModels(DatabaseTestCase):
+class TestModels(AppTestCase):
     def test_aircrafts_upsert(self):
         aircraft_1 = payloads.AircraftPayload(id=1, name='Boeing-777')
         aircraft_2 = payloads.AircraftPayload(id=1, name='SU-9')
