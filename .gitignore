@@ -6,4 +6,4 @@ config.ini
 help.md
 checklist.md
 _[!_]*.py
-.env
+*.env
