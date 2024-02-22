@@ -1,16 +1,11 @@
 from fastapi import FastAPI
-from sqlalchemy_utils import create_database, database_exists
 
-from .database import engine
-from .models import Base
 from .flights_api.router import airport_router
+from .auth.router import auth_router
+from .config import settings
 
 
-if not database_exists(url=engine.url):
-    create_database(url=engine.url)
+app = FastAPI(root_path=settings.ROOT_PATH)
+app.include_router(airport_router, prefix=settings.AIRPORT_PATH)
+app.include_router(auth_router, prefix=settings.AUTH_PATH)
 
-Base.metadata.drop_all(bind=engine)
-Base.metadata.create_all(bind=engine)
-
-app = FastAPI()
-app.include_router(airport_router, prefix='/api/v1')
