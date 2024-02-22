@@ -23,9 +23,6 @@ class SyncOrm:
         created_user = models.UserModel(**new_user.model_dump())
 
         conn.add(created_user)
-        try:
-            conn.commit()
-        except IntegrityError:
-            return
+        conn.commit()
 
         return created_user
