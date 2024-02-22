@@ -6,6 +6,7 @@ from fastapi import Depends, Form, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import jwt, JWTError
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from . import (
     errors,
@@ -21,15 +22,15 @@ from ..config import settings
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.ROOT_PATH + settings.AUTH_PATH + '/token')
-
+connection = Annotated[Session, Depends(get_session)]
 
 def authenticate_user(
-        conn: Annotated[Session, Depends(get_session(expire_on_commit=False))],
+        conn: connection,
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()]
 ) -> UserModel | None:
 
     user = SyncOrm.get_user(conn=conn, email=form_data.username)
-    if not (user or encryption.verify_password(form_data.password, user.hashed_password)):
+    if not (user and encryption.verify_password(form_data.password, user.hashed_password)):
         raise errors.login_error
     else:
         return user
@@ -55,7 +56,7 @@ def get_token_data(token: Annotated[str, Depends(oauth2_scheme)]):
 
 
 def get_current_user(
-        conn: Annotated[Session, Depends(get_session(expire_on_commit=False))],
+        conn: connection,
         token_data: Annotated[schemas.TokenData, Depends(get_token_data)]
 ) -> UserModel | None:
 
@@ -65,7 +66,7 @@ def get_current_user(
     return user
 
 
-def register_user(conn: Annotated[Session, Depends(get_session(expire_on_commit=False))], username: Annotated[str, Form()], password: Annotated[str, Form()]) -> UserModel | None:
+def register_user(conn: connection, username: Annotated[str, Form()], password: Annotated[str, Form()]) -> UserModel | None:
     hashed_password = encryption.get_password_hash(password)
     try:
         new_user = schemas.UserInDB(
@@ -77,8 +78,9 @@ def register_user(conn: Annotated[Session, Depends(get_session(expire_on_commit=
     except ValidationError as err:
         raise HTTPException(status_code=401, detail=str({e['loc'][0]: e['msg'] for e in err.errors()}))
 
-    registered_user = SyncOrm.create_user(conn, new_user)
-    if not registered_user:
+    try:
+        registered_user = SyncOrm.create_user(conn, new_user)
+    except IntegrityError:
         raise errors.register_login_error
 
     return registered_user

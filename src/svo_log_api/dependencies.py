@@ -1,8 +1,11 @@
 from .database import session
 
 
-def get_session(**params):
-    def session_gen():
+def session_gen(**params):
+    def _get_session():
         with session(**params) as conn:
             yield conn
-    return session_gen
+    return _get_session
+
+
+get_session = session_gen(expire_on_commit=False)
