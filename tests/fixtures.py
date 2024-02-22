@@ -6,8 +6,8 @@ from fastapi.testclient import TestClient
 
 from src.svo_log_api.config import settings
 from src.svo_log_api import models
-from src.svo_log_api.main import app
 from src.svo_log_api.dependencies import get_session
+from src.svo_log_api.main import app
 
 
 class AppTestCase(TestCase):
@@ -26,11 +26,12 @@ class AppTestCase(TestCase):
 
         cls.session = sessionmaker(bind=cls.engine)
 
-        def get_test_session(**params):
-            def session_gen():
+        def session_test_gen(**params):
+            def _get_session():
                 with cls.session(**params) as conn:
                     yield conn
-            return session_gen
+            return _get_session
+        get_test_session = session_test_gen(expire_on_commit=False)
 
         app.dependency_overrides[get_session] = get_test_session
         cls.client = TestClient(app)
