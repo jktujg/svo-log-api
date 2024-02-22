@@ -5,5 +5,5 @@
 config.ini
 help.md
 checklist.md
-_*.py
+_[!_]*.py
 .env
