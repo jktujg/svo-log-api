@@ -1,15 +1,15 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, AnyHttpUrl
+from pydantic import BaseModel, Field, AnyHttpUrl, ConfigDict
 from typing import Annotated
 
 from .field_types import Direction
 
 
 class BaseEntity(BaseModel):
-
-    class Config:
-        frozen = True
-        from_attributes = True
+    model_config = ConfigDict(
+        frozen=True,
+        from_attributes=True,
+    )
 
 
 class AircraftSchema(BaseEntity):

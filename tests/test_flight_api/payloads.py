@@ -1,12 +1,13 @@
 from typing import Any
-from pydantic import BaseModel, SkipValidation, Field
+from pydantic import BaseModel, SkipValidation, Field, ConfigDict
 
 
 class Payload(BaseModel):
-    class Config:
-        extra = 'allow'
-        arbitrary_types_allowed = True
-        frozen = True
+    model_config = ConfigDict(
+        extra='allow',
+        arbitrary_types_allowed=True,
+        frozen=True,
+    )
 
 
 class AircraftPayload(Payload):
