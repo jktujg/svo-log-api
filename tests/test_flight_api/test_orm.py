@@ -9,13 +9,13 @@ from tests.fixtures import AppTestCase
 
 class TestModels(AppTestCase):
     def test_aircrafts_upsert(self):
-        aircraft_1 = payloads.AircraftPayload(id=1, name='Boeing-777')
-        aircraft_2 = payloads.AircraftPayload(id=1, name='SU-9')
+        aircraft_1 = payloads.AircraftPayload(name='Boeing-777', id=1)
+        aircraft_2 = payloads.AircraftPayload(name='Boeing-777', id=2)
 
         result_1 = SyncOrm.upsert_aircrafts(self.conn, [aircraft_1])
         result_2 = SyncOrm.upsert_aircrafts(self.conn, [aircraft_2])
 
-        self.assertEqual(result_2[0].name, aircraft_2.name)
+        self.assertEqual(result_2[0].orig_id, aircraft_2.orig_id)
 
     def test_countries_upsert(self):
         country_1 = payloads.CountryPayload(name='Russia', region='DOMESTIC')

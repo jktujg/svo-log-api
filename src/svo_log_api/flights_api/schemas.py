@@ -13,8 +13,8 @@ class BaseEntity(BaseModel):
 
 
 class AircraftSchema(BaseEntity):
+    name: str
     orig_id: int | None = Field(alias='id')
-    name: str | None = None
 
 
 class CountrySchema(BaseEntity):
@@ -30,10 +30,10 @@ class CitySchema(BaseEntity):
 
 
 class AirportSchema(BaseEntity):
-    orig_id: int = Field(alias='id')
     iata: str = Field(pattern='^[A-Z]{3}$')
-    icao: str = Field(pattern='^[A-Z]{4}$')
-    code_ru: str | None = Field(pattern=r'^([А-Я]{3})|.{0}$')
+    icao: str | None = Field(None, pattern='^[A-Z]{4}$')
+    code_ru: str | None = Field(None, pattern=r'^([А-Я]{3})|.{0}$')
+    orig_id: int | None = Field(None, alias='id')
     name: str
     name_ru: str
     lat: float | None = None
@@ -60,7 +60,7 @@ class FlightSchema(BaseEntity):
     mar4: AirportSchema | None = None
     mar5: AirportSchema | None = None
     aircraft: AircraftSchema
-    main_id: int | None = None
+    main_orig_id: int | None = Field(None, alias='main_id')
     way_time: int | None = None
     # check-in
     chin_start: datetime | None = None

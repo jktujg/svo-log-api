@@ -12,9 +12,8 @@ from ..fields import created_at, updated_at
 class AircraftModel(Base):
     __tablename__ = 'aircrafts'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    orig_id: Mapped[Optional[int]] = mapped_column(unique=True, nullable=True)
-    name: Mapped[Optional[str]]
+    name: Mapped[str] = mapped_column(primary_key=True)
+    orig_id: Mapped[Optional[int]] = mapped_column()
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -25,8 +24,7 @@ class AircraftModel(Base):
 class CountryModel(Base):
     __tablename__ = 'countries'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(primary_key=True)
     region: Mapped[Optional[str]] = None
 
     created_at: Mapped[created_at]
@@ -38,11 +36,10 @@ class CountryModel(Base):
 class CityModel(Base):
     __tablename__ = 'cities'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
-    name_ru: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(primary_key=True)
+    name_ru: Mapped[str]
     timezone: Mapped[str]
-    country_id: Mapped[int] = mapped_column(ForeignKey('countries.id', ondelete='set null'))
+    country_name: Mapped[str] = mapped_column(ForeignKey('countries.name', ondelete='set null'))
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -54,16 +51,15 @@ class CityModel(Base):
 class AirportModel(Base):
     __tablename__ = 'airports'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    orig_id: Mapped[int] = mapped_column(unique=False)
-    iata: Mapped[str] = mapped_column(String(3), unique=True)
-    icao: Mapped[str] = mapped_column(String(4), unique=False)
+    iata: Mapped[str] = mapped_column(String(3), primary_key=True)
+    icao: Mapped[Optional[str]] = mapped_column(String(4))
     code_ru: Mapped[Optional[str]] = mapped_column(String(3))
+    orig_id: Mapped[Optional[int]]
     name: Mapped[str]
     name_ru: Mapped[str]
     lat: Mapped[Optional[float]] = mapped_column(DECIMAL(9, 6))
     long: Mapped[Optional[float]] = mapped_column(DECIMAL(9, 6))
-    city_id: Mapped[int] = mapped_column(ForeignKey('cities.id', ondelete='set null'))
+    city_name: Mapped[str] = mapped_column(ForeignKey('cities.name', ondelete='set null'))
 
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
@@ -74,8 +70,7 @@ class AirportModel(Base):
 class CompanyModel(Base):
     __tablename__ = 'companies'
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    iata: Mapped[str] = mapped_column(String(2), unique=True)
+    iata: Mapped[str] = mapped_column(String(2), primary_key=True)
     name: Mapped[Optional[str]]
     url_buy: Mapped[Optional[str]]
     url_register: Mapped[Optional[str]]
@@ -92,18 +87,18 @@ class FlightModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     orig_id: Mapped[int] = mapped_column(unique=True)
 
-    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id', ondelete='set null'))
-    mar1_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
-    mar2_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
-    mar3_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
-    mar4_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
-    mar5_id: Mapped[int] = mapped_column(ForeignKey('airports.id', ondelete='set null'), nullable=True)
-    aircraft_id: Mapped[int] = mapped_column(ForeignKey('aircrafts.id', ondelete='set null'), nullable=True)
+    mar1_iata: Mapped[str] = mapped_column(ForeignKey('airports.iata', ondelete='set null'), nullable=True)
+    mar2_iata: Mapped[str] = mapped_column(ForeignKey('airports.iata', ondelete='set null'), nullable=True)
+    mar3_iata: Mapped[str] = mapped_column(ForeignKey('airports.iata', ondelete='set null'), nullable=True)
+    mar4_iata: Mapped[str] = mapped_column(ForeignKey('airports.iata', ondelete='set null'), nullable=True)
+    mar5_iata: Mapped[str] = mapped_column(ForeignKey('airports.iata', ondelete='set null'), nullable=True)
+    aircraft_name: Mapped[str] = mapped_column(ForeignKey('aircrafts.name', ondelete='set null'), nullable=True)
+    company_iata: Mapped[str] = mapped_column(ForeignKey('companies.iata', ondelete='set null'))
 
-    direction: Mapped[Direction]
     number: Mapped[int]
+    direction: Mapped[Direction]
     date: Mapped[datetime]
-    main_id: Mapped[Optional[int]]
+    main_orig_id: Mapped[Optional[int]]
     way_time: Mapped[Optional[int]]
     # check-in
     chin_start: Mapped[Optional[datetime]]
@@ -146,11 +141,11 @@ class FlightModel(Base):
 
     company: Mapped['CompanyModel'] = relationship(lazy='joined', back_populates='flights')
     aircraft: Mapped['AircraftModel'] = relationship(lazy='joined', back_populates='flights')
-    mar1: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar1_id == AirportModel.id", backref='mar1_flights')
-    mar2: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar2_id == AirportModel.id", backref='mar2_flights')
-    mar3: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar3_id == AirportModel.id", backref='mar3_flights')
-    mar4: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar4_id == AirportModel.id", backref='mar4_flights')
-    mar5: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar5_id == AirportModel.id", backref='mar5_flights')
+    mar1: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar1_iata == AirportModel.iata", backref='mar1_flights')
+    mar2: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar2_iata == AirportModel.iata", backref='mar2_flights')
+    mar3: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar3_iata == AirportModel.iata", backref='mar3_flights')
+    mar4: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar4_iata == AirportModel.iata", backref='mar4_flights')
+    mar5: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar5_iata == AirportModel.iata", backref='mar5_flights')
     changelog: Mapped[list['FlightsChangelogModel'] | None] = relationship(back_populates='flight')
 
 

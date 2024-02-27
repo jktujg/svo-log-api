@@ -1,4 +1,4 @@
-from sqlalchemy_utils import create_database, database_exists
+from sqlalchemy_utils import create_database, database_exists, drop_database
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
@@ -9,6 +9,8 @@ from .database import session
 from .auth.schemas import UserInDB
 from .auth import encryption
 from .auth.permissions import UserRole, UserState
+
+from .main import app
 
 
 class DevSettings(BaseSettings):
@@ -21,8 +23,9 @@ class DevSettings(BaseSettings):
 
 dev_settings = DevSettings()
 
-if not database_exists(url=engine.url):
-    create_database(url=engine.url)
+if database_exists(url=engine.url):
+    drop_database(url=engine.url)
+create_database(url=engine.url)
 
 engine.echo = False
 
@@ -45,5 +48,3 @@ basic_user = UserInDB(
 with session() as conn:
     AuthSyncOrm.create_user(conn, root_user)
     AuthSyncOrm.create_user(conn, basic_user)
-
-from .main import *

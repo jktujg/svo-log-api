@@ -11,19 +11,19 @@ class SyncOrm:
 
     @staticmethod
     def upsert_aircrafts(conn: Session, data: Iterable[BaseModel]) -> Sequence[models.AircraftModel]:
-        mapped_aircrafts = {a.orig_id: a for a in data}
+        mapped_aircrafts = {a.name: a for a in data}
 
         query = (
             select(models.AircraftModel)
-            .filter(models.AircraftModel.orig_id.in_(list(mapped_aircrafts)))
+            .filter(models.AircraftModel.name.in_(list(mapped_aircrafts)))
         )
 
         existed_aircrafts = conn.execute(query).scalars().all()
 
         for aircraft in existed_aircrafts:
-            if aircraft.name != (new_name := mapped_aircrafts[aircraft.orig_id].name):
-                aircraft.name = new_name
-            mapped_aircrafts.pop(aircraft.orig_id)
+            if aircraft.orig_id != (new_orig_id := mapped_aircrafts[aircraft.name].orig_id):
+                aircraft.orig_id = new_orig_id
+            mapped_aircrafts.pop(aircraft.name)
 
         new_aircrafts = [models.AircraftModel(**a.model_dump()) for a in mapped_aircrafts.values()]
         conn.add_all(new_aircrafts)
@@ -70,9 +70,9 @@ class SyncOrm:
         )
 
         existed_cities = conn.execute(query).scalars().all()
-        update_columns = utils.get_columns(models.CityModel, exclude={'country_id', 'created_at', 'updated_at'})
-        for city in existed_cities:
+        update_columns = utils.get_columns(models.CityModel, exclude={'country_name', 'created_at', 'updated_at'})
 
+        for city in existed_cities:
             for column in update_columns:
                 if getattr(city, column) != (new_value := getattr(mapped_cities[city.name], column)):
                     setattr(city, column, new_value)
@@ -100,9 +100,9 @@ class SyncOrm:
         cities = {c.name: c for c in SyncOrm.upsert_cities(conn, [a.city for a in mapped_airports.values()])}
 
         existed_airports = conn.execute(query).scalars().all()
-        update_columns = utils.get_columns(models.AirportModel, exclude={'city_id', 'created_at', 'updated_at'})
-        for airport in existed_airports:
+        update_columns = utils.get_columns(models.AirportModel, exclude={'city_name', 'created_at', 'updated_at'})
 
+        for airport in existed_airports:
             for column in update_columns:
                 if getattr(airport, column) != (new_value := getattr(mapped_airports[airport.iata], column)):
                     setattr(airport, column, new_value)
@@ -117,7 +117,6 @@ class SyncOrm:
         conn.commit()
 
         return list(existed_airports) + new_airports
-
 
     @staticmethod
     def upsert_companies(conn: Session, data: Iterable[schemas.CompanySchema]) -> Sequence[models.CompanyModel]:
@@ -157,7 +156,7 @@ class SyncOrm:
                     airports.add(getattr(flight, f'mar{i}'))
 
         companies_models = {c.iata: c for c in SyncOrm.upsert_companies(conn, companies)}
-        aircrafts_models = {a.orig_id: a for a in SyncOrm.upsert_aircrafts(conn, aircrafts)}
+        aircrafts_models = {a.name: a for a in SyncOrm.upsert_aircrafts(conn, aircrafts)}
         airports_models = {a.iata: a for a in SyncOrm.upsert_airports(conn, airports)}
 
         query = (
@@ -167,9 +166,9 @@ class SyncOrm:
 
         existed_flights = conn.execute(query).scalars().all()
         update_columns = utils.get_columns(models.FlightModel, exclude=(
-            'company_id',
-            *[f'mar{i}_id' for i in range(1, 6)],
-            'aircraft_id',
+            'company_iata',
+            *[f'mar{i}_iata' for i in range(1, 6)],
+            'aircraft_name',
             'created_at',
             'updated_at',
         ))
@@ -185,7 +184,7 @@ class SyncOrm:
 
             flight_schema = mapped_flights[flight.orig_id]
             flight.company = companies_models[flight_schema.company.iata]
-            flight.aircraft = aircrafts_models[flight_schema.aircraft.orig_id]
+            flight.aircraft = aircrafts_models[flight_schema.aircraft.name]
             for i in range(1, 6):
                 attr = f'mar{i}'
                 airport_schema = getattr(flight_schema, attr)
@@ -198,7 +197,7 @@ class SyncOrm:
         new_flights = [models.FlightModel(**f.model_dump(
             exclude={'company', 'aircraft', *[f'mar{i}' for i in range(1, 6)]}),
                                           company=companies_models[f.company.iata],
-                                          aircraft=aircrafts_models[f.aircraft.orig_id],
+                                          aircraft=aircrafts_models[f.aircraft.name],
                                           **{f'mar{i}': airports_models[getattr(f, f'mar{i}').iata] for i in range(1, 6)
                                              if getattr(f, f'mar{i}') is not None}
                                           )
