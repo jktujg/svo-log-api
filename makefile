@@ -1,8 +1,8 @@
 run_dev:
-	uvicorn src.svo_log_api.main_dev:app --reload --port 8091
+	python -m src.svo_log_api.main_dev
 
 run_prod:
-	uvicorn src.svo_log_api.main:app --port 8092
+	python -m src.svo_log_api.main
 
 test:
 	python -m unittest

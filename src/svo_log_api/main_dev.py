@@ -1,6 +1,7 @@
 from sqlalchemy_utils import create_database, database_exists, drop_database
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+import uvicorn
 
 from .database import engine
 from .models import Base
@@ -9,8 +10,7 @@ from .database import session
 from .auth.schemas import UserInDB
 from .auth import encryption
 from .auth.permissions import UserRole, UserState
-
-from .main import app
+from .logging import log_config
 
 
 class DevSettings(BaseSettings):
@@ -48,3 +48,7 @@ basic_user = UserInDB(
 with session() as conn:
     AuthSyncOrm.create_user(conn, root_user)
     AuthSyncOrm.create_user(conn, basic_user)
+
+
+if __name__ == '__main__':
+    uvicorn.run('src.svo_log_api.main:app', reload=True, port=8099, log_config=log_config)

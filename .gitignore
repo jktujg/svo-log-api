@@ -7,3 +7,4 @@ help.md
 checklist.md
 _[!_]*.py
 *.env
+*.jsonl
