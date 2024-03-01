@@ -1,6 +1,12 @@
 from datetime import datetime
-from pydantic import BaseModel, Field, AnyHttpUrl, ConfigDict
 from typing import Annotated
+from pydantic import (BaseModel,
+                      Field,
+                      AnyHttpUrl,
+                      ConfigDict,
+                      AliasChoices,
+                      computed_field,
+                      )
 
 from .field_types import Direction
 
@@ -14,7 +20,7 @@ class BaseEntity(BaseModel):
 
 class AircraftSchema(BaseEntity):
     name: str
-    orig_id: int | None = Field(alias='id')
+    orig_id: int | None = Field(validation_alias=AliasChoices('orig_id', 'id'))
 
 
 class CountrySchema(BaseEntity):
@@ -23,7 +29,7 @@ class CountrySchema(BaseEntity):
 
 
 class CitySchema(BaseEntity):
-    name: str = Field(alias='name_en')
+    name: str = Field(validation_alias=AliasChoices('name', 'name_en'))
     name_ru: str
     timezone: str
     country: CountrySchema
@@ -33,23 +39,23 @@ class AirportSchema(BaseEntity):
     iata: str = Field(pattern='^[A-Z]{3}$')
     icao: str | None = Field(None, pattern='^[A-Z]{4}$')
     code_ru: str | None = Field(None, pattern=r'^([А-Я]{3})|.{0}$')
-    orig_id: int | None = Field(None, alias='id')
+    orig_id: int | None = Field(None,  validation_alias=AliasChoices('orig_id', 'id'))
     name: str
     name_ru: str
     lat: float | None = None
     long: float | None = None
     city: CitySchema
 
-
+#todo change company to airline
 class CompanySchema(BaseEntity):
-    iata: str = Field(pattern=r'^\w{2}$', alias='code')
+    iata: str = Field(pattern=r'^\w{2}$', validation_alias=AliasChoices('iata', 'code'))
     name: str | None = None
     url_buy: Annotated[str, AnyHttpUrl] | None = None
     url_register: Annotated[str, AnyHttpUrl] | None = None
 
 
 class FlightSchema(BaseEntity):
-    orig_id: int = Field(alias='id')
+    orig_id: int = Field(validation_alias=AliasChoices('orig_id', 'id'))
     direction: Direction
     company: CompanySchema
     number: int
@@ -60,7 +66,7 @@ class FlightSchema(BaseEntity):
     mar4: AirportSchema | None = None
     mar5: AirportSchema | None = None
     aircraft: AircraftSchema
-    main_orig_id: int | None = Field(None, alias='main_id')
+    main_orig_id: int | None = Field(None, validation_alias=AliasChoices('main_orig_id', 'main_id'))
     way_time: int | None = None
     # check-in
     chin_start: datetime | None = None
