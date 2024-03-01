@@ -146,7 +146,7 @@ class FlightModel(Base):
     mar3: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar3_iata == AirportModel.iata", backref='mar3_flights')
     mar4: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar4_iata == AirportModel.iata", backref='mar4_flights')
     mar5: Mapped[Optional['AirportModel']] = relationship(lazy='joined', primaryjoin="FlightModel.mar5_iata == AirportModel.iata", backref='mar5_flights')
-    changelog: Mapped[list['FlightsChangelogModel'] | None] = relationship(back_populates='flight')
+    changelog: Mapped[list['FlightsChangelogModel'] | None] = relationship(back_populates='flight', order_by='desc(FlightsChangelogModel.created_at)')
 
 
 class FlightsChangelogModel(Base):
@@ -155,7 +155,7 @@ class FlightsChangelogModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     flight_id: Mapped[int] = mapped_column(ForeignKey('flights.id', ondelete='set null'), index=True)
     field: Mapped[str]
-    new_value: Mapped[Optional[str]]
+    old_value: Mapped[Optional[str]]
 
     created_at: Mapped[created_at]
 

@@ -1,6 +1,6 @@
 from typing import Sequence, Iterable
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import select
 from pydantic import BaseModel
 
@@ -177,10 +177,10 @@ class SyncOrm:
         for flight in existed_flights:
 
             for column in update_columns:
-                if getattr(flight, column) != (new_value := getattr(mapped_flights[flight.orig_id], column)):
+                if (old_value := getattr(flight, column)) != (new_value := getattr(mapped_flights[flight.orig_id], column)):
                     setattr(flight, column, new_value)
                     flights_changelog.append(
-                        models.FlightsChangelogModel(field=column, new_value=new_value, flight=flight))
+                        models.FlightsChangelogModel(field=column, old_value=old_value, flight=flight))
 
             flight_schema = mapped_flights[flight.orig_id]
             flight.company = companies_models[flight_schema.company.iata]

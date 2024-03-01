@@ -68,9 +68,7 @@ class TestModels(AppTestCase):
 
         self.assertEqual(len(changelog), 1)
         self.assertEqual(changelog[0].field, 'chin_id')
-        self.assertEqual(changelog[0].new_value, flight_2.chin_id)
-
-        # self.assertListEqual([changelog.field, changelog.new_value], ['chin_id', flight_2.chin_id])
+        self.assertEqual(changelog[0].old_value, flight_1.chin_id)
 
     def test_cities_upsert(self):
         city_1 = payloads.CityPayload(name_en='Moscow', timezone='A')
