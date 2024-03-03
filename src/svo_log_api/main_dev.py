@@ -1,7 +1,7 @@
 import uvicorn
 
 from .database import engine
-from .logging import log_config
+from .logger import log_config
 from .main import app
 from .flights_api.dependencies import upsert_permission
 

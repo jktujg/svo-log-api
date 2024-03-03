@@ -12,7 +12,7 @@
       "fmt": "%(asctime)s: %(levelprefix)s %(client_addr)s - \"%(request_line)s\" %(status_code)s"
     },
      "json_formatter": {
-      "()": "src.svo_log_api.logging.JSONFormatter",
+      "()": "src.svo_log_api.logger.JSONFormatter",
       "fmt_keys": {
         "level": "levelname",
         "message": "message",
@@ -53,13 +53,13 @@
       "backupCount": 3
     },
     "queued_default": {
-      "()": "src.svo_log_api.logging.CustomQueueHandler",
+      "()": "src.svo_log_api.logger.CustomQueueHandler",
       "handler_0": "cfg://handlers._default",
       "handler_1": "cfg://handlers._default_file",
       "respect_handler_level": true
     },
     "queued_access": {
-      "()": "src.svo_log_api.logging.CustomQueueHandler",
+      "()": "src.svo_log_api.logger.CustomQueueHandler",
       "handler_0": "cfg://handlers._access",
       "handler_1": "cfg://handlers._access_file",
       "respect_handler_level": true

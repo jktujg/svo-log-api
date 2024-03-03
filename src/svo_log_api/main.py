@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from .flights_api.router import airport_router
 from .auth.router import auth_router
 from .config import settings
-from .logging import log_config
+from .logger import log_config
 
 app = FastAPI(root_path=settings.ROOT_PATH)
 app.include_router(airport_router, prefix=settings.AIRPORT_PATH)
