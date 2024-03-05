@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Sequence
 from collections import defaultdict
 from sqlalchemy.orm import DeclarativeBase
 
@@ -34,3 +34,9 @@ def get_columns(model: DeclarativeBase, exclude: Optional[Iterable] = tuple(), i
 
     return columns
 
+
+def get_page(arr: Sequence, page, limit):
+    start_index = page * limit
+    end_index = start_index + limit
+
+    return arr[start_index: end_index]

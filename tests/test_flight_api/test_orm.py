@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from datetime import datetime, timedelta
 
 from src.svo_log_api.flights_api.queries.orm import SyncOrm
 from src.svo_log_api.flights_api import models, schemas
@@ -8,6 +9,17 @@ from tests.fixtures import AppTestCase
 
 
 class TestModels(AppTestCase):
+    def _upsert_flights_from_dict(self, flights: list[dict]):
+        """ Inserts flights one by one to ensure id sequence """
+        models = []
+        for f in flights:
+            model = SyncOrm.upsert_flights(
+                conn=self.conn,
+                data=[schemas.FlightSchema(**payloads.FlightPayload(**f).model_dump(by_alias=True))]
+            )
+            models.append(model)
+        return models
+
     def test_aircrafts_upsert(self):
         aircraft_1 = payloads.AircraftPayload(name='Boeing-777', id=1)
         aircraft_2 = payloads.AircraftPayload(name='Boeing-777', id=2)
@@ -78,3 +90,98 @@ class TestModels(AppTestCase):
         result_2 = SyncOrm.upsert_cities(self.conn, [city_2])
 
         self.assertEqual(result_2[0].timezone, 'B')
+
+    def test_get_flights_ids_required_params(self):
+        now = datetime.now()
+        flights = [
+            dict(schemas.CompanySchema(iata='SU'), direction='arrival', id=1, sked_local=now - timedelta(days=10)),
+            dict(company=schemas.CompanySchema(iata='N4'), direction='arrival', id=2, sked_local=now),
+            dict(company=schemas.CompanySchema(iata='N4'), direction='departure', id=3, sked_local=now),
+            dict(company=schemas.CompanySchema(iata='U2'), direction='arrival', id=4, sked_local=now + timedelta(days=10))
+        ]
+        self._upsert_flights_from_dict(flights)
+
+        selected_flight_ids = SyncOrm.get_flight_ids(conn=self.conn, params=schemas.FlightsGetParamsSchema(
+            direction='arrival',
+            date_start=datetime.now() - timedelta(hours=1),
+            date_end=datetime.now() + timedelta(hours=2),
+        ))
+
+        self.assertListEqual(selected_flight_ids, [2])
+
+    def test_get_flights_ids_company(self):
+        flights = [
+            dict(company=schemas.CompanySchema(iata='SU'), direction='arrival', id=1),
+            dict(company=schemas.CompanySchema(iata='N4'), direction='arrival', id=2),
+        ]
+        self._upsert_flights_from_dict(flights)
+        query_flights = SyncOrm.get_flight_ids(conn=self.conn, params=schemas.FlightsGetParamsSchema(
+            company='SU',
+            direction='arrival',
+            date_start=datetime.now() - timedelta(days=10000),
+            date_end=datetime.now()
+        ))
+
+        self.assertListEqual(query_flights, [1])
+
+    def test_get_flights_ids_gate_id(self):
+        flights = [
+            dict(direction='arrival', id=1, gate_id='c1'),
+            dict(direction='arrival', id=2, gate_id='d5')
+        ]
+        self._upsert_flights_from_dict(flights)
+        query_flights = SyncOrm.get_flight_ids(conn=self.conn, params=schemas.FlightsGetParamsSchema(
+            gate_id='c1',
+            direction='arrival',
+            date_start=datetime.now() - timedelta(days=10000),
+            date_end=datetime.now()
+        ))
+
+        self.assertListEqual(query_flights, [1])
+
+    def test_get_flights_ids_destination(self):
+        flights = [
+            dict(direction='arrival', id=1, mar1=payloads.AirportPayload(iata='KGF')),
+            dict(direction='departure', id=2, mar2=payloads.AirportPayload(iata='LAX'))
+        ]
+        self._upsert_flights_from_dict(flights)
+        flight_kgf = SyncOrm.get_flight_ids(conn=self.conn, params=schemas.FlightsGetParamsSchema(
+            destination='KGF',
+            direction='arrival',
+            date_start=datetime.now() - timedelta(days=10000),
+            date_end=datetime.now()
+        ))
+        flight_lax = SyncOrm.get_flight_ids(conn=self.conn, params=schemas.FlightsGetParamsSchema(
+            destination='LAX',
+            direction='departure',
+            date_start=datetime.now() - timedelta(days=10000),
+            date_end=datetime.now()
+        ))
+
+        self.assertListEqual(flight_kgf, [1])
+        self.assertListEqual(flight_lax, [2])
+
+    def test_get_flights_by_ids(self):
+        flights = [
+            dict(direction='arrival', id=1),
+            dict(direction='departure', id=2, gate_id='old'),
+            dict(direction='departure', id=2, gate_id='new'),
+            dict(direction='departure', id=3),
+        ]
+        self._upsert_flights_from_dict(flights)
+        flight_models = SyncOrm.get_flights_by_ids(conn=self.conn, ids=[1, 2, 5], changelog=False)
+
+        self.assertEqual(len(flight_models), 2)
+        self.assertListEqual(flight_models[1].changelog, [])
+
+    def test_get_flights_by_ids_with_changelog(self):
+        flights = [
+            dict(direction='arrival', id=1, gate_id='old'),
+            dict(direction='arrival', id=1, gate_id='new'),
+        ]
+        self._upsert_flights_from_dict(flights)
+        flight_models = SyncOrm.get_flights_by_ids(conn=self.conn, ids=[1], changelog=True)
+
+        self.assertEqual(flight_models[0].changelog[0].old_value, 'old')
+
+

@@ -1,6 +1,6 @@
 from typing import Sequence, Iterable
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, noload
 from sqlalchemy import select
 from pydantic import BaseModel
 
@@ -209,3 +209,36 @@ class SyncOrm:
 
         return list(existed_flights) + new_flights
 
+    @staticmethod
+    def get_flight_ids(conn: Session, params: schemas.FlightsGetParamsSchema) -> Sequence[models.FlightModel.id]:
+        query = (
+            select(models.FlightModel.__table__.c.id)
+            .order_by(models.FlightModel.sked_local.asc())
+            .filter(models.FlightModel.direction == params.direction)
+            .filter(models.FlightModel.sked_local >= params.date_start,
+                    models.FlightModel.sked_local <= params.date_end)
+        )
+        if params.company is not None:
+            query = query.filter(models.FlightModel.company_iata == params.company)
+        if params.gate_id is not None:
+            query = query.filter(models.FlightModel.gate_id == params.gate_id)
+        if params.destination is not None:
+            other_airport_mar = {'arrival': 1, 'departure': 2}[params.direction]
+            attr = getattr(models.FlightModel, f'mar{other_airport_mar}_iata')
+            query = query.filter(attr == params.destination)
+
+        flight_ids = conn.execute(query).scalars().all()
+        return flight_ids
+
+    @staticmethod
+    def get_flights_by_ids(conn: Session, ids: Sequence[int], changelog: bool = False) -> Sequence[models.FlightModel]:
+        loadmethod = joinedload if changelog is True else noload
+        query = (
+            select(models.FlightModel)
+            .options(loadmethod(models.FlightModel.changelog))
+            .order_by(models.FlightModel.sked_local.asc())
+            .filter(models.FlightModel.id.in_(ids))
+        )
+        flights = conn.execute(query).scalars().unique().all()
+
+        return flights

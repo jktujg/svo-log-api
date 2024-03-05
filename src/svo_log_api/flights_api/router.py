@@ -1,7 +1,10 @@
+import math
 from typing import Annotated
 from fastapi import APIRouter, Depends
+from fastapi.exceptions import HTTPException
 
 from .queries.orm import SyncOrm
+from . import utils
 from . import (
     schemas,
     dependencies
@@ -38,3 +41,32 @@ def upsert_companies(conn: dependencies.connection, companies: list[schemas.Comp
 @airport_router.put('/flights/', dependencies=[Depends(dependencies.upsert_permission)])
 def upsert_flights(conn: dependencies.connection, flights: list[schemas.FlightSchema]):
     SyncOrm.upsert_flights(conn, flights)
+
+
+@airport_router.get('/flights/', response_model=schemas.FlightResponseContainer)
+def get_flights(
+        conn: dependencies.connection,
+        params: Annotated[schemas.FlightsGetParamsSchema, Depends()],
+        paging: Annotated[schemas.PagingSchema, Depends()],
+        changelog: bool = False,
+):
+    flight_ids = SyncOrm.get_flight_ids(conn, params=params)                  # caching
+    paged_ids = utils.get_page(flight_ids, page=paging.page, limit=paging.limit)
+    flights = SyncOrm.get_flights_by_ids(conn, ids=paged_ids, changelog=changelog)
+
+    return dict(
+        flights=flights,
+        count=len(flights),
+        total=len(flight_ids),
+        page=paging.page,
+        total_pages=math.ceil(len(flight_ids) / paging.limit),
+    )
+
+
+@airport_router.get('/flights/{flight_id}', response_model=schemas.FlightResponseSchema)
+def get_flight(conn: dependencies.connection, flight_id: int, changelog: bool = False):
+    flight = SyncOrm.get_flights_by_ids(conn, ids=[flight_id], changelog=changelog)
+
+    if not flight:
+        raise HTTPException(status_code=404, detail='Not Found')
+    return flight[0]

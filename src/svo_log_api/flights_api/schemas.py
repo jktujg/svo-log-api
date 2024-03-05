@@ -1,16 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Annotated
 from pydantic import (BaseModel,
                       Field,
                       AnyHttpUrl,
                       ConfigDict,
                       AliasChoices,
-                      computed_field,
+                      field_validator,
                       )
-
 from .field_types import Direction
 
-
+#todo add alias generators for serializing by alias in camel case style
 class BaseEntity(BaseModel):
     model_config = ConfigDict(
         frozen=True,
@@ -104,3 +103,43 @@ class FlightSchema(BaseEntity):
     status_id: int | None = None
     status_code: int | None = None
 
+
+class ChangelogFlightSchema(BaseModel):
+    field: str
+    old_value: str | None
+    created_at: datetime
+
+
+class FlightResponseSchema(FlightSchema):
+    id: int
+    changelog: list[ChangelogFlightSchema] | None = Field(default_factory=list)
+
+
+class FlightResponseContainer(BaseModel):
+    flights: list[FlightResponseSchema]
+    count: int
+    total: int
+    page: int
+    total_pages: int = Field()
+
+
+class FlightsGetParamsSchema(BaseModel):
+    date_start: datetime = Field(description='departure or landing')
+    date_end: datetime = Field(description='departure or landing')
+    direction: Direction
+
+    company: str | None = Field(None, pattern=r'^\w{2}$', description='iata code')
+    gate_id: str | None = None
+    destination: str | None = Field(None,  pattern='^[A-Z]{3}$', description='other airport')
+
+    @field_validator('date_start', 'date_end', mode='after')
+    @classmethod
+    def up_to_minute(cls, date: datetime):
+        """ For caching """
+        if date is not None:
+            return date.replace(second=0, microsecond=0) + timedelta(minutes=1)
+
+
+class PagingSchema(BaseModel):
+    page: int = Field(0, ge=0, description='Starts with 0')
+    limit: int = Field(100, ge=1, le=100)
