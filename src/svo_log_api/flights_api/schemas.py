@@ -57,7 +57,7 @@ class FlightSchema(BaseEntity):
     orig_id: int = Field(validation_alias=AliasChoices('orig_id', 'id'))
     direction: Direction
     company: CompanySchema
-    number: int
+    number: str
     date: datetime
     mar1: AirportSchema | None = None
     mar2: AirportSchema | None = None

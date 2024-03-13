@@ -53,7 +53,7 @@ def get_flights(
     flight_ids = SyncOrm.get_flight_ids(conn, params=params)                  # caching
     paged_ids = utils.get_page(flight_ids, page=paging.page, limit=paging.limit)
     flights = SyncOrm.get_flights_by_ids(conn, ids=paged_ids, changelog=changelog)
-
+    #todo добавить отдельную схему под пагинацию (Pagination)
     return dict(
         flights=flights,
         count=len(flights),

@@ -95,7 +95,7 @@ class FlightModel(Base):
     aircraft_name: Mapped[str] = mapped_column(ForeignKey('aircrafts.name', ondelete='set null'), nullable=True)
     company_iata: Mapped[str] = mapped_column(ForeignKey('companies.iata', ondelete='set null'))
 
-    number: Mapped[int]
+    number: Mapped[str]
     direction: Mapped[Direction]
     date: Mapped[datetime]
     main_orig_id: Mapped[Optional[int]]

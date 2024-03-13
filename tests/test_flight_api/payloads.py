@@ -49,7 +49,7 @@ class CompanyPayload(Payload):
 class FlightPayload(Payload):
     orig_id: SkipValidation[Any] = Field(default=8770878, alias='id')
     direction: SkipValidation[Any] = 'arrival'
-    number: SkipValidation[Any] = 556
+    number: SkipValidation[Any] = '556'
     date: SkipValidation[Any] = '2023-12-19T00:00:00+03:00'
     mar1: SkipValidation[Any] = AirportPayload()
     takeoff_et: SkipValidation[Any] = '2023-12-19T18:55:00+03:00'
