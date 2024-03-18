@@ -8,3 +8,5 @@ checklist.md
 _[!_]*.py
 *.env
 *.jsonl
+.env*
+docker-compose*
