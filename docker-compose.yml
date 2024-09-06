@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:15
+    container_name: svolog-db
+    command: -p ${DB_PORT}
+    restart: unless-stopped
+    ports:
+      - 127.0.0.0:5432:${DB_PORT}
+    env_file:
+      - path: .env
+        required: false
+      - path: .prod.env
+        required: false
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    healthcheck:
+      test: pg_isready -p ${DB_PORT} -d ${DB_NAME} -U ${DB_USER}
+      start_period: 10s
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - ./volumes/db/data/:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+    container_name: svolog-api
+    restart: unless-stopped
+    ports:
+      - 127.0.0.1:8000:8000
+    env_file:
+      - path: .env
+        required: false
+      - path: .prod.env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ['/svo-log-api/compose_cmd.sh']
+    volumes:
+      - ./volumes/api/logs:/svo-log-api/logs

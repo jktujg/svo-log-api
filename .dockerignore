@@ -1,0 +1,10 @@
+.idea/
+venv/
+*__pycache__/
+volumes/
+_logs/
+*~*
+*.env*
+*.jsonl
+.coverage
+/_*

@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "disable_existing_loggers": true,
+  "formatters": {
+    "json_formatter": {
+      "()": "logging_extension.JSONFormatter",
+      "fmt_keys": {
+        "created": "created",
+        "level": "levelname",
+        "message": "message",
+        "logger": "name",
+        "module": "module",
+        "function": "funcName",
+        "line": "lineno",
+        "thread_name": "threadName"
+      }
+    },
+    "access_formater": {
+      "format": "%(asctime)s:  [%(levelname)s]  %(client_host)s:%(client_port)s - \"%(method)s %(query_path)s?%(query_params)s\" %(status_code)s"
+    },
+    "default_formatter": {
+      "format": "%(asctime)s:  [%(levelname)s]  %(message)s"
+    }
+  },
+  "filters": {
+    "below_info": {
+      "()": "logging_extension.LevelFilter",
+      "level": "INFO",
+      "compare": "lt"
+    },
+    "below_warning": {
+      "()": "logging_extension.LevelFilter",
+      "level": "WARNING",
+      "compare": "lt"
+    }
+  },
+  "handlers": {
+    "debug_file_handler": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "filename": "./_logs/debug.log",
+      "maxBytes": 100e6,
+      "backupCount": 3,
+      "filters": ["below_info"],
+      "formatter": "json_formatter"
+    },
+    "info_file_handler": {
+      "()": "logging.handlers.RotatingFileHandler",
+      "filename": "./_logs/info.log",
+      "maxBytes": 100e6,
+      "backupCount": 3,
+      "level": "INFO",
+      "filters": ["below_warning"],
+      "formatter": "json_formatter"
+    },
+    "error_file_handler": {
+      "class": "logging.handlers.RotatingFileHandler",
+      "filename": "./_logs/error.log",
+      "maxBytes": 100e6,
+      "backupCount": 3,
+      "level": "WARNING",
+      "formatter": "json_formatter"
+    },
+    "stdout_handler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout",
+     "filters": ["below_warning"],
+      "formatter": "json_formatter"
+    },
+    "stderr_handler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stderr",
+      "level": "WARNING",
+      "formatter": "json_formatter"
+    },
+    "threaded_file_handler": {
+      "()": "logging_extension.ThreadedHandler",
+      "handler_0": "cfg://handlers.debug_file_handler",
+      "handler_1": "cfg://handlers.info_file_handler",
+      "handler_2": "cfg://handlers.error_file_handler",
+      "respect_handler_level": true
+    },
+    "access_handler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout",
+      "level": "INFO",
+      "formatter": "access_formater"
+    },
+    "threaded_access_handler": {
+      "()": "logging_extension.ThreadedHandler",
+      "access_handler_0": "cfg://handlers.access_handler",
+      "respect_handler_level": true
+    },
+    "default_handler": {
+      "class": "logging.StreamHandler",
+      "stream": "ext://sys.stdout",
+      "level": "WARNING",
+      "formatter": "default_formatter"
+    },
+    "threaded_default_handler": {
+      "()": "logging_extension.ThreadedHandler",
+      "access_handler_0": "cfg://handlers.default_handler",
+      "respect_handler_level": true
+    }
+  },
+  "loggers": {
+    "svolog": {
+      "level": "DEBUG",
+      "handlers": ["threaded_file_handler"]
+    },
+    "svolog.access": {
+      "level": "DEBUG",
+      "handlers": ["threaded_access_handler"]
+    },
+    "svolog.default": {
+      "level": "DEBUG",
+      "handlers": ["threaded_default_handler"]
+    }
+  }
+}

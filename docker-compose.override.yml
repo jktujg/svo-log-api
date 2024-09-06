@@ -1,0 +1,5 @@
+services:
+  api:
+    volumes:
+      - ./:/svo-log-api/
+    command: ['/svo-log-api/compose_cmd.override.sh']
