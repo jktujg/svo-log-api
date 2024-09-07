@@ -334,9 +334,9 @@ class FlightQuerySchema(BaseSchema):
     date_end: AwareDatetime = QueryField(serialization_alias='le@sked_local')
     direction: Direction | None = None
 
-    company: str | list[str] | None = QueryField(None, pattern=patterns.company_iata_many, description='iata code', serialization_alias='in_::CompanyModel^iata')
+    company: str | None = QueryField(None, pattern=patterns.company_iata_many, description='iata code', serialization_alias='in_::CompanyModel^iata')
     gate_id: str | None = None
-    destination: str | list[str] | None = QueryField(None, pattern=patterns.airport_iata_many, description='other airport', serialization_alias='in_::mar1_iata.mar2_iata')
+    destination: str | None = QueryField(None, pattern=patterns.airport_iata_many, description='other airport', serialization_alias='in_::mar1_iata.mar2_iata')
     term_local: str | None = None
     number: str | None = None
 

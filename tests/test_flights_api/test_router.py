@@ -374,6 +374,7 @@ class TestFlight:
 
                 (flight(company=company(iata='SU')), dict(company='SU'), FOUND),
                 (flight(company=company(iata='N4')), dict(company='SU,N4,5N'), FOUND),
+                (flight(company=company(iata='N4')), dict(company='5N'), NOT_FOUND),
 
                 (flight(gate_id='B103'), dict(gate_id='B103'), FOUND),
                 (flight(gate_id='B103'), dict(gate_id='103'), NOT_FOUND),
@@ -381,6 +382,8 @@ class TestFlight:
                 (flight(mar1=airport(iata='SVO')), dict(destination='SVO'), FOUND),
                 (flight(mar2=airport(iata='DME')), dict(destination='DME'), FOUND),
                 (flight(mar2=airport(iata='KHV')), dict(destination='AER,KHV,EVN'), FOUND),
+                (flight(mar2=airport(iata='KHV')), dict(destination='AER'), NOT_FOUND),
+                (flight(mar2=airport(iata='KHV')), dict(destination='AER,EVN'), NOT_FOUND),
 
                 (flight(term_local='B'), dict(term_local='B'), FOUND),
 
